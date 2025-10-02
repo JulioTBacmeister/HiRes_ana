@@ -1,0 +1,14 @@
+*/*/Untitled*.ipynb
+*/Untitled*.ipynb
+*/*/.ipynb_checkpoints
+*/.ipynb_checkpoints
+.ipynb_checkpoints
+*/*/__pycache__
+*/__pycache__
+__pycache__
+Drivers/HRproc.o*
+Drivers/config_ana.yaml
+*~
+*/*~
+*/*/*~
+

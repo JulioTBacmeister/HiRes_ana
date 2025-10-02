@@ -1,0 +1,10 @@
+Dst: fv1x1
+DstVgrid: L93
+Case: c153_topfix_ne240pg3_FMTHIST_xic_x02
+Archive_base:  #/glade/derecho/scratch/juliob/archive/
+Output_abs_dir: #/glade/derecho/scratch/juliob/test_of_HR_ana
+day: 1
+frequency: 6
+hour: 0
+month: 7
+year: 2004
