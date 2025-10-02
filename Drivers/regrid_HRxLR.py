@@ -59,7 +59,10 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
     else: 
         days_to_do=[day]
     if (hour==99): 
-        freq=config['frequency']
+        if (config['frequency'] is None):
+            freq=6
+        else:
+            freq=config['frequency']
         hours_to_do=np.arange( start=0,stop=24, step=freq )
     else: 
         hours_to_do=[hour]
@@ -293,5 +296,7 @@ def handle(var, *, hard_exit: bool = True):
                 print("Bad Input"); sys.exit(1)
             raise ValueError("Bad Input")
 
+if __name__ == "__main__":
+    drive()
 
 
