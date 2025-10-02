@@ -25,4 +25,10 @@ in ./Drivers. To run the code, control_ana.yaml must exist in ./Drivers.
 A notebook is provided in ./Drivers to run  regrid_HRxLR.py interactively:
 TestDriver.ipynb.
 
-A C-shell batch script PyBatch_HRana.csh is also provided. 
+A C-shell batch script PyBatch_HRana.csh is also provided.
+
+Running this code will require access to scrip files in:
+
+	/glade/work/juliob/GridFiles/Scrip
+
+To change this modify paths in ./Drivers/Utils/GridUtils.py (function gridInfo)
