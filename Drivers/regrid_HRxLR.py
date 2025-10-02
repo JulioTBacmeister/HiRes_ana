@@ -26,6 +26,9 @@ import cftime
 import yaml
 import numbers
 
+# Some other useful packages 
+import importlib
+
 #from box import Box
 
 def drive(write_file=True, return_dataset=False, verbose=False ):  
@@ -33,7 +36,12 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
     user = os.getenv("USER")  
 
     #####################################
+    # Initialize config
+    config = uc.initialize()
+    print( config )
+    #####################################
     # Read YAML and make date string
+    #########
     file_path = './config_ana.yaml'  # Specify the path to your config file
     config = uc.read_config_yaml( file_path )
     print( config )
@@ -41,8 +49,9 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
     month=int( config['month'] )
     day=config['day']
     hour=config['hour'] 
-    print( year, type(year).__name__ , month, type(month).__name__ )
-    print( day, type(day).__name__ , hour, type(hour).__name__ )
+    #print( year, type(year).__name__ , month, type(month).__name__ )
+    #print( day, type(day).__name__ , hour, type(hour).__name__ )
+    print( f"Year={year},  Month={month}", flush=True )
 
     case=config['Case']
     if (config['Archive_base'] is None):
@@ -52,7 +61,7 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
 
     day=handle(day)
     hour=handle(hour)
-    print( day, type(day).__name__ , hour, type(hour).__name__ )
+    #print( day, type(day).__name__ , hour, type(hour).__name__ )
 
     if (day==99): 
         days_to_do=np.arange( uti.days_in_month(year,month) )+1
@@ -67,9 +76,9 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
     else: 
         hours_to_do=[hour]
 
-    print( days_to_do )
-    print( hours_to_do )
-    
+    print( f"Will do days={days_to_do}", flush=True )
+    print( f"Will do hours={hours_to_do}", flush=True )
+
     #####################################
     # Initialize regrid-object library
     RgObLib={}

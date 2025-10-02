@@ -3,8 +3,12 @@ import yaml
 from datetime import datetime, timedelta
 
 def read_config_yaml(file_path):
+    
+    config = initialize() 
+
     with open(file_path, "r") as config_file:
-        config = yaml.safe_load(config_file)
+        newdata = yaml.safe_load(config_file) or {}
+    config.update({k: newdata[k] for k in config.keys() if k in newdata})
     return config
 
 def write_config_yaml(file_path, config):
@@ -83,6 +87,23 @@ def main():
     config = read_config(file_path)
     config = increment_day(config)
     write_config(file_path, config)
+
+
+def initialize():
+    config = { 
+        'Dst': None , 
+        'DstVgrid':  None , 
+        'Case': None ,  
+        'Archive_base': None , 
+        'Output_abs_dir': None , 
+        'day': None , 
+        'frequency': None , 
+        'hour': None , 
+        'month':  None , 
+        'year': None , 
+    }
+
+    return config
 
 if __name__ == "__main__":
     main()
