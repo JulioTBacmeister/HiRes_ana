@@ -28,8 +28,8 @@ import numbers
 
 # Some other useful packages 
 import importlib
+from pathlib import Path
 
-#from box import Box
 
 def drive(write_file=True, return_dataset=False, verbose=False ):  
 
@@ -131,129 +131,131 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
         
             #fin = f'/glade/derecho/scratch/juliob/archive/c153_topfix_ne240pg3_FMTHIST_xic_x02/atm/hist/c153_topfix_ne240pg3_FMTHIST_xic_x02.cam.h1i.{date_tag}.nc'
             fin = f"{archive_base}/{case}/atm/hist/{case}.cam.h1i.{date_tag}.nc"
-            print( f"Processing {fin} ", flush=True )
-            X=xr.open_dataset( fin )
-
-            ##################################################################
-            # Set up dataset for regridded data
-            ##################################################################
-
-
-            if (config["Output_abs_dir"] is None):
-                Bdiro=f"{archive_base}/{case}/atm/fv1x1"  #{case}.cam.h1i.{date_tag}.nc"
-            else:
-                Bdiro=f"{config["Output_abs_dir"]}"
-            #######
-            os.makedirs( Bdiro , exist_ok=True )
-
-            fout = f"{Bdiro}/{case}.cam.h1i.{date_tag}.nc"
-
-            if( verbose==True):
-                print( f"reading {fin}" , flush=True )
-                print( f"writing {fout}", flush=True  )
             
-            coords = dict( 
-                lon  = ( ["lon"],lon1R ),
-                lat  = ( ["lat"],lat1R ),
-                lev  = ( ["lev"],X.lev.values),
-                ilev = ( ["ilev"],X.ilev.values),
-                nbnd = ( ["nbnd"], np.array( [0,1] ) ),
-                time = ( ["time"],  X.time.values ), #pd.to_datetime( pdTime_ERA[itim] ) ),
-            )
-
-
-            Xo = xr.Dataset( coords=coords  )
-            Xo["time_bounds"] = X.time_bounds 
-            Xo["hyai"] = X.hyai
-            Xo["hybi"] = X.hybi
-            Xo["hyam"] = X.hyam
-            Xo["hybm"] = X.hybm
-
-            nt,nz,ny,nx = len( X.time.values ) , len( X.lev.values ), len( lat1R), len( lon1R)
-            
-            ##################################################################
-
-
-            lonO = X.lon.values
-            latO = X.lat.values
-            lev  = X.lev.values
-        
-            
-            uO = X.U.values
-            vO = X.V.values
-            wO = X.OMEGA.values
-        
-            
-            uOx2=RgF.Horz(xfld_Src=uO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
-            uOx2xO=RgF.Horz(xfld_Src=uOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
-            print( f"finished U" )
-            vOx2=RgF.Horz(xfld_Src=vO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
-            vOx2xO=RgF.Horz(xfld_Src=vOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
-            print( f"finished V" )
-            wOx2=RgF.Horz(xfld_Src=wO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
-            wOx2xO=RgF.Horz(xfld_Src=wOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
-            print( f"finished OMEGA" )
-        
-        
-            ##################################################################
-            # Now calculate perturbations using coarse-grained=>remapped fields as
-            # background
-            ##################################################################
-            upO = uO - uOx2xO
-            vpO = vO - vOx2xO
-            wpO = wO - wOx2xO
-        
-            upwpO= upO * wpO 
-            upwpOx2    = RgF.Horz(xfld_Src=upwpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
-            upwpOx2x1R = RgF.Horz(xfld_Src=upwpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
-            Dar = xr.DataArray( data=upwpOx2x1R.reshape(nt,nz,ny,nx), 
-                                dims=('time','lev','lat','lon',),
-                                attrs=dict( long_name='x-monmentum flux',units='m+2 s-2',) ,) 
-            Xo['upwp'] = Dar
-            if( verbose==True):
-                print( f"Finshed with UpWp " , flush=True )
-
-            vpwpO= vpO * wpO 
-            vpwpOx2    = RgF.Horz(xfld_Src=vpwpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
-            vpwpOx2x1R = RgF.Horz(xfld_Src=vpwpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
-            Dar = xr.DataArray( data=vpwpOx2x1R.reshape(nt,nz,ny,nx), 
-                                dims=('time','lev','lat','lon',),
-                                attrs=dict( long_name='x-momentum flux',units='m+2 s-2',) ,) 
-            Xo['vpwp'] = Dar
-            if( verbose==True):
-                print( f"Finshed with VpWp " , flush=True )
-
-            for var in regrid_list:
-                varO = X[var].values
-                if ('lev' in X[var].dims):
-                    vdims = ('time','lev','lat','lon',)
-                    reshp = [ nt,nz,ny,nx ]
-                elif ('ilev' in X[var].dims):
-                    vdims = ('time','ilev','lat','lon',)
-                    reshp = [ nt,nz+1,ny,nx ]
-                else: 
-                    vdims = ('time','lat','lon',)
-                    reshp = [ nt,ny,nx ]
-                
+            if Path(fin).is_file():            
+                print( f"Processing {fin} ", flush=True )
+                X=xr.open_dataset( fin )
+    
+                ##################################################################
+                # Set up dataset for regridded data
+                ##################################################################
+                if (config["Output_abs_dir"] is None):
+                    Bdiro=f"{archive_base}/{case}/atm/fv1x1"  #{case}.cam.h1i.{date_tag}.nc"
+                else:
+                    Bdiro=f"{config["Output_abs_dir"]}"
+                #######
+                os.makedirs( Bdiro , exist_ok=True )
+    
+                fout = f"{Bdiro}/{case}.cam.h1i.{date_tag}.nc"
+    
                 if( verbose==True):
-                    print( f" regridding {var}" , flush=True )
-                    print( f"    original shape {varO.shape}" , flush=True )
-                    print( f"    new dims {vdims}" , flush=True )
-                    print( f"    re-shape {reshp}" , flush=True )
+                    print( f"reading {fin}" , flush=True )
+                    print( f"writing {fout}", flush=True  )
                 
+                coords = dict( 
+                    lon  = ( ["lon"],lon1R ),
+                    lat  = ( ["lat"],lat1R ),
+                    lev  = ( ["lev"],X.lev.values),
+                    ilev = ( ["ilev"],X.ilev.values),
+                    nbnd = ( ["nbnd"], np.array( [0,1] ) ),
+                    time = ( ["time"],  X.time.values ), #pd.to_datetime( pdTime_ERA[itim] ) ),
+                )
+    
+    
+                Xo = xr.Dataset( coords=coords  )
+                Xo["time_bounds"] = X.time_bounds 
+                Xo["hyai"] = X.hyai
+                Xo["hybi"] = X.hybi
+                Xo["hyam"] = X.hyam
+                Xo["hybm"] = X.hybm
+    
+                nt,nz,ny,nx = len( X.time.values ) , len( X.lev.values ), len( lat1R), len( lon1R)
+            
+                ##################################################################
+    
+    
+                lonO = X.lon.values
+                latO = X.lat.values
+                lev  = X.lev.values
+            
                 
-                varOx1R = RgF.Horz(xfld_Src=varO ,  Src='ne240pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne240_x_fv1x1  ) 
+                uO = X.U.values
+                vO = X.V.values
+                wO = X.OMEGA.values
+            
                 
-                Dar = xr.DataArray( data=varOx1R.reshape( reshp ), 
-                                    dims=vdims ,
+                uOx2=RgF.Horz(xfld_Src=uO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
+                uOx2xO=RgF.Horz(xfld_Src=uOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
+                print( f"finished U" )
+                vOx2=RgF.Horz(xfld_Src=vO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
+                vOx2xO=RgF.Horz(xfld_Src=vOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
+                print( f"finished V" )
+                wOx2=RgF.Horz(xfld_Src=wO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
+                wOx2xO=RgF.Horz(xfld_Src=wOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
+                print( f"finished OMEGA" )
+            
+        
+                ##################################################################
+                # Now calculate perturbations using coarse-grained=>remapped fields as
+                # background
+                ##################################################################
+                upO = uO - uOx2xO
+                vpO = vO - vOx2xO
+                wpO = wO - wOx2xO
+            
+                upwpO= upO * wpO 
+                upwpOx2    = RgF.Horz(xfld_Src=upwpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
+                upwpOx2x1R = RgF.Horz(xfld_Src=upwpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
+                Dar = xr.DataArray( data=upwpOx2x1R.reshape(nt,nz,ny,nx), 
+                                    dims=('time','lev','lat','lon',),
+                                    attrs=dict( long_name='x-monmentum flux',units='m+2 s-2',) ,) 
+                Xo['upwp'] = Dar
+                if( verbose==True):
+                    print( f"Finshed with UpWp " , flush=True )
+    
+                vpwpO= vpO * wpO 
+                vpwpOx2    = RgF.Horz(xfld_Src=vpwpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
+                vpwpOx2x1R = RgF.Horz(xfld_Src=vpwpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
+                Dar = xr.DataArray( data=vpwpOx2x1R.reshape(nt,nz,ny,nx), 
+                                    dims=('time','lev','lat','lon',),
                                     attrs=dict( long_name='x-momentum flux',units='m+2 s-2',) ,) 
-                Xo[var] = Dar
+                Xo['vpwp'] = Dar
                 if( verbose==True):
-                    print( f"Finshed with {var}" , flush=True )
+                    print( f"Finshed with VpWp " , flush=True )
+    
+                for var in regrid_list:
+                    varO = X[var].values
+                    if ('lev' in X[var].dims):
+                        vdims = ('time','lev','lat','lon',)
+                        reshp = [ nt,nz,ny,nx ]
+                    elif ('ilev' in X[var].dims):
+                        vdims = ('time','ilev','lat','lon',)
+                        reshp = [ nt,nz+1,ny,nx ]
+                    else: 
+                        vdims = ('time','lat','lon',)
+                        reshp = [ nt,ny,nx ]
+                    
+                    if( verbose==True):
+                        print( f" regridding {var}" , flush=True )
+                        print( f"    original shape {varO.shape}" , flush=True )
+                        print( f"    new dims {vdims}" , flush=True )
+                        print( f"    re-shape {reshp}" , flush=True )
+                    
                 
-            if (write_file==True):
-                Xo.to_netcdf( fout )
-                print( f"   Wrote {fout} ",flush=True )
+                    varOx1R = RgF.Horz(xfld_Src=varO ,  Src='ne240pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne240_x_fv1x1  ) 
+                    
+                    Dar = xr.DataArray( data=varOx1R.reshape( reshp ), 
+                                        dims=vdims ,
+                                        attrs=dict( long_name='x-momentum flux',units='m+2 s-2',) ,) 
+                    Xo[var] = Dar
+                    if( verbose==True):
+                        print( f"Finshed with {var}" , flush=True )
+                    
+                if (write_file==True):
+                    Xo.to_netcdf( fout )
+                    print( f"   Wrote {fout} ",flush=True )
+            else:
+                print( f"{fin} DOES NOT EXIST!!!", flush=True )
                 
         
     if (return_dataset==True ):
