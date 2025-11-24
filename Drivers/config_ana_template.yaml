@@ -1,10 +1,12 @@
-Dst: fv1x1 # Put here for future use. Not used now.
-DstVgrid: L93 # Put here for future use. Not used now.
 Case: c153_topfix_ne240pg3_FMTHIST_xic_x02
 Archive_base:  #if empty defaults /glade/derecho/scratch/juliob/archive/
 Output_abs_dir: # if specified will write data here. if empty defaults to {archive_base}/{case}/atm/fv1x1
-day: 1 # if this is '*' or 99, code will go through the entire month
-frequency: 6 # Put here for future use. If this line is empty, code defaults to 6-hr frequency
-hour: 0 # if this is '*' or 99, code will go through the entire day at above frequency
-month: 7
+day: 99 # if this is '*' or 99, code will go through the entire month
+hour: 99 # if this is '*' or 99, code will go through the entire day at above frequency
+month: 10
 year: 2004
+hsPat: cam.h3i
+varlist: ['PS','PTTEND','THLP2_CLUBB','UPWP_CLUBB','VPWP_CLUBB','WP2_CLUBB',]
+Resubmit: -1
+StepBy: hour
+StepN: 6

@@ -19,16 +19,18 @@ conda activate npl-2025b
 # The Python code called below is
 # controlled by
 #
-#     config_ERA5regrid.yaml
+#     config_ana.yaml
 #
 # Nothing to do here.
 #--------------------------------------
 echo "Cruising .... "
 
-# remove logs that are more than 15 minutes old.
+# remove logs that are more than 10 minutes old.
 #-----------------------------------------------
-find . -type f -name "HRproc.o*" -mmin +15 -exec rm {} \;
+find . -type f -name "HRproc.o*" -mmin +10 -exec rm {} \;
 
 
 ./regrid_HRxLR.py
+./regrid_genl.py
+./recur.py
 

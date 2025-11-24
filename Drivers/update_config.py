@@ -8,7 +8,8 @@ def read_config_yaml(file_path):
 
     with open(file_path, "r") as config_file:
         newdata = yaml.safe_load(config_file) or {}
-    config.update({k: newdata[k] for k in config.keys() if k in newdata})
+    #config.update({k: newdata[k] for k in config.keys() if k in newdata})
+    config.update({k: newdata[k] for k in newdata})
     return config
 
 def write_config_yaml(file_path, config):

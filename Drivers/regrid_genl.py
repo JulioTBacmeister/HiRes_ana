@@ -29,12 +29,37 @@ import numbers
 # Some other useful packages 
 import importlib
 from pathlib import Path
+import random
+from datetime import datetime
 
+importlib.reload( uc )
+
+"""
+| Code | Meaning                |
+| ---- | ---------------------- |
+| `%Y` | 4-digit year           |
+| `%y` | 2-digit year           |
+| `%m` | month (01–12)          |
+| `%b` | abbreviated month name |
+| `%B` | full month name        |
+| `%d` | day of month           |
+| `%H` | hour (24-hr)           |
+| `%M` | minute                 |
+| `%S` | second                 |
+| `%a` | short weekday          |
+| `%A` | full weekday           |
+"""
 
 def drive(write_file=True, return_dataset=False, verbose=False ):  
 
     user = os.getenv("USER")  
+    key = random.randint(0, 99999)
+    #print(f"{key:05d}")
+    sTag=f"e{key:05d}"
+    now = datetime.now()
+    print(f'Running the script on {now.strftime("%Y-%m-%d")}', flush=True )
 
+    
     #####################################
     # Initialize config
     config = uc.initialize()
@@ -76,61 +101,48 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
     else: 
         hours_to_do=[hour]
 
+    """
+    # Override YAML settings with explicit command-line arguments
+    odir = args.output_dir or config.get("output_dir")
+    casename = args.casename or config.get("casename")
+    runtype = args.type or config.get("type")
+    clean_case = args.clean_case if args.clean_case else config.get("clean_case", False)
+    run_case = args.run_case if args.run_case else config.get("run_case", False)
+    build_case = args.build_case if args.build_case else config.get("build_case", False)
+    """
+    #regrid_list=config.get("varlist") if config.get("varlist") else ['PS','U','V','OMEGA','T']
+    #regrid_list=config.get("varlist") or ['PS','U','V','OMEGA','T']
+
+    print( f'config.get("varlist") is None {config.get("varlist") is None}' )
+    regrid_list=config.get("varlist") or ['PS','U','V','OMEGA','T']
+    hsPat = config.get("hsPat") or 'cam.h1i'
+    """
+    if config.get("varlist") is not None:
+        regrid_list=config.get("varlist")
+    else: 
+        regrid_list=['PS','U','V','OMEGA','T']
+    """
     print( f"Will do days={days_to_do}", flush=True )
     print( f"Will do hours={hours_to_do}", flush=True )
 
+    print( 'regrid_list', regrid_list , flush=True )
+    print ( 'hsPat', hsPat , flush=True )
+
+    
     #####################################
     # Initialize regrid-object library
     RgObLib={}
 
-
-    RgOb_ne240_x_ne16   = GrU.regrid_object_lib(RgOb=RgObLib, src='ne240pg3', dst='ne16pg3',  RegridMethod='CONSERVE_2ND')
-    RgOb_ne16_x_ne240   = GrU.regrid_object_lib(RgOb=RgObLib, src='ne16pg3',  dst='ne240pg3', RegridMethod='BILINEAR')
     RgOb_ne240_x_fv1x1  = GrU.regrid_object_lib(RgOb=RgObLib, src='ne240pg3', dst='fv1x1',    RegridMethod='CONSERVE_2ND')
-    RgOb_ne16_x_fv1x1   = GrU.regrid_object_lib(RgOb=RgObLib, src='ne16pg3',  dst='fv1x1',    RegridMethod='BILINEAR')
-
 
     lat1R,lon1R = GrU.latlon( grid='fv1x1' )
 
-    
-    ######################################################################
-    #  Momentum fluxes and other 2nd order moments. 
-    #
-    #  Algorithm:
-    #     regrid (conserve_2) ne240 ==> ne16
-    #        uO ==> uOx2
-    #        vO ==> vOx2
-    #        wO ==> wOx2 (w=omega)
-    #     regrid (bilinear) ne16 ==> ne240 
-    #        uOx2 ==> uOx2xO
-    #        vOx2 ==> vOx2xO
-    #        wOx2 ==> wOx2xO
-    #
-    #  Fields {u,v,w}Ox2xO are regarded as large-scale 
-    #  background. Perturbations (on ne240) are then
-    #
-    #        {up,vp,wp}O = {u,v,w}O - {u,v,w}Ox2xO
-    #
-    #  A second order moment is then calculated like this. 
-    #
-    #         upwpO = upO * wpO 
-    #
-    #     regrid (conserve_2) ne240 ==> ne16
-    #          upwpO ==> upwpOx2
-    #
-    #     regrid (bilinear) ne16 ==> fv1x1
-    #          upwpOx2 ==> upwpOx2x1R
-    #
-    ######################################################################
-
-
-    regrid_list=['PS','U','V','OMEGA','T']
     for d in days_to_do:
         for h in hours_to_do:
             date_tag = f"{year:04}-{month:02}-{d:02}-{3600*h:05}"
         
             #fin = f'/glade/derecho/scratch/juliob/archive/c153_topfix_ne240pg3_FMTHIST_xic_x02/atm/hist/c153_topfix_ne240pg3_FMTHIST_xic_x02.cam.h1i.{date_tag}.nc'
-            fin = f"{archive_base}/{case}/atm/hist/{case}.cam.h1i.{date_tag}.nc"
+            fin = f"{archive_base}/{case}/atm/hist/{case}.{hsPat}.{date_tag}.nc"
             
             if Path(fin).is_file():            
                 print( f"Processing {fin} ", flush=True )
@@ -146,11 +158,10 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
                 #######
                 os.makedirs( Bdiro , exist_ok=True )
     
-                fout = f"{Bdiro}/{case}.cam.h1i.{date_tag}.nc"
-    
-                if( verbose==True):
-                    print( f"reading {fin}" , flush=True )
-                    print( f"writing {fout}", flush=True  )
+                #fout = f"{Bdiro}/{case}.{sTag}.{hsPat}.{date_tag}.nc"
+                fout = f"{Bdiro}/{case}.{hsPat}.{date_tag}.nc"
+                
+                print( f"Will write {fout}", flush=True  )
                 
                 coords = dict( 
                     lon  = ( ["lon"],lon1R ),
@@ -178,51 +189,6 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
                 latO = X.lat.values
                 lev  = X.lev.values
             
-                
-                uO = X.U.values
-                vO = X.V.values
-                wO = X.OMEGA.values
-            
-                
-                uOx2=RgF.Horz(xfld_Src=uO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
-                uOx2xO=RgF.Horz(xfld_Src=uOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
-                print( f"finished U" )
-                vOx2=RgF.Horz(xfld_Src=vO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
-                vOx2xO=RgF.Horz(xfld_Src=vOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
-                print( f"finished V" )
-                wOx2=RgF.Horz(xfld_Src=wO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
-                wOx2xO=RgF.Horz(xfld_Src=wOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
-                print( f"finished OMEGA" )
-            
-        
-                ##################################################################
-                # Now calculate perturbations using coarse-grained=>remapped fields as
-                # background
-                ##################################################################
-                upO = uO - uOx2xO
-                vpO = vO - vOx2xO
-                wpO = wO - wOx2xO
-            
-                upwpO= upO * wpO 
-                upwpOx2    = RgF.Horz(xfld_Src=upwpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
-                upwpOx2x1R = RgF.Horz(xfld_Src=upwpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
-                Dar = xr.DataArray( data=upwpOx2x1R.reshape(nt,nz,ny,nx), 
-                                    dims=('time','lev','lat','lon',),
-                                    attrs=dict( long_name='x-monmentum flux',units='m+2 s-2',) ,) 
-                Xo['upwp'] = Dar
-                if( verbose==True):
-                    print( f"Finshed with UpWp " , flush=True )
-    
-                vpwpO= vpO * wpO 
-                vpwpOx2    = RgF.Horz(xfld_Src=vpwpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
-                vpwpOx2x1R = RgF.Horz(xfld_Src=vpwpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
-                Dar = xr.DataArray( data=vpwpOx2x1R.reshape(nt,nz,ny,nx), 
-                                    dims=('time','lev','lat','lon',),
-                                    attrs=dict( long_name='x-momentum flux',units='m+2 s-2',) ,) 
-                Xo['vpwp'] = Dar
-                if( verbose==True):
-                    print( f"Finshed with VpWp " , flush=True )
-
                 
                 for var in regrid_list:
                     varO = X[var].values
