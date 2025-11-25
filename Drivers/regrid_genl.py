@@ -191,6 +191,17 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
             
                 
                 for var in regrid_list:
+
+                    attribs = X[var].attrs
+                    if ('long_name' in attribs):
+                        longname = attribs['long_name']
+                    else:
+                        longname = 'n/a'
+                    if ('units' in attribs):
+                        units = attribs['units']
+                    else:
+                        units = 'n/a'
+
                     varO = X[var].values
                     if ('lev' in X[var].dims):
                         vdims = ('time','lev','lat','lon',)
@@ -213,7 +224,7 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
                     
                     Dar = xr.DataArray( data=varOx1R.reshape( reshp ), 
                                         dims=vdims ,
-                                        attrs=dict( long_name='x-momentum flux',units='m+2 s-2',) ,) 
+                                        attrs=dict( long_name=longname,units=units,) ,) 
                     Xo[var] = Dar
                     if( verbose==True):
                         print( f"Finshed with {var}" , flush=True )

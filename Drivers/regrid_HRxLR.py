@@ -8,6 +8,7 @@ import os
 
 from Utils import GridUtils as GrU
 from Utils import utils as uti
+from Utils import MyConstants as Co
 
 #from PyRegridding.Utils import MakePressures as MkP
 #from Drivers import RegridField as RgF
@@ -30,6 +31,8 @@ import numbers
 import importlib
 from pathlib import Path
 
+# Constants
+grav=Co.grav()
 
 def drive(write_file=True, return_dataset=False, verbose=False ):  
 
@@ -168,6 +171,7 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
                 Xo["hybi"] = X.hybi
                 Xo["hyam"] = X.hyam
                 Xo["hybm"] = X.hybm
+
     
                 nt,nz,ny,nx = len( X.time.values ) , len( X.lev.values ), len( lat1R), len( lon1R)
             
@@ -177,22 +181,36 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
                 lonO = X.lon.values
                 latO = X.lat.values
                 lev  = X.lev.values
-            
+
+                rhoprx = 1.2* lev/1_000.
+                Dar = xr.DataArray( data=rhoprx, 
+                                    dims=('lev',),
+                                    attrs=dict( long_name='Proxy-air-density',units='kg m-3',) ,) 
+                Xo['RhoProxy'] = Dar
+                
                 
                 uO = X.U.values
                 vO = X.V.values
                 wO = X.OMEGA.values
+                tO = X.T.values
+
+                # Scale omega to something like w
+                for k in np.arange( nz ):
+                    wO[:,k,:] = (-1./(grav*rhoprx[k]))*wO[:,k,:]
             
                 
                 uOx2=RgF.Horz(xfld_Src=uO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
                 uOx2xO=RgF.Horz(xfld_Src=uOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
-                print( f"finished U" )
+                print( f"finished U" , flush=True )
                 vOx2=RgF.Horz(xfld_Src=vO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
                 vOx2xO=RgF.Horz(xfld_Src=vOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
-                print( f"finished V" )
+                print( f"finished V" , flush=True  )
                 wOx2=RgF.Horz(xfld_Src=wO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
                 wOx2xO=RgF.Horz(xfld_Src=wOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
-                print( f"finished OMEGA" )
+                print( f"finished OMEGA" , flush=True )
+                tOx2=RgF.Horz(xfld_Src=tO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
+                tOx2xO=RgF.Horz(xfld_Src=tOx2 , Src='ne16pg3' , Dst='ne240pg3', RegridObj_In= RgOb_ne16_x_ne240  ) 
+                print( f"finished T" , flush=True )
             
         
                 ##################################################################
@@ -202,30 +220,92 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
                 upO = uO - uOx2xO
                 vpO = vO - vOx2xO
                 wpO = wO - wOx2xO
-            
+                tpO = tO - tOx2xO
+
+                ####################
+                # fluxes
+                ####################
+                # - upwp
                 upwpO= upO * wpO 
                 upwpOx2    = RgF.Horz(xfld_Src=upwpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
                 upwpOx2x1R = RgF.Horz(xfld_Src=upwpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
-                Dar = xr.DataArray( data=upwpOx2x1R.reshape(nt,nz,ny,nx), 
+                # This scales upwp back to momentum flux in N m-2
+                for k in np.arange( nz ):
+                    upwpOx2x1R[:,k,:,:] = rhoprx[k] * upwpOx2x1R[:,k,:,:]
+                Dar = xr.DataArray( data=upwpOx2x1R , 
                                     dims=('time','lev','lat','lon',),
-                                    attrs=dict( long_name='x-monmentum flux',units='m+2 s-2',) ,) 
+                                    attrs=dict( long_name='x-momentum flux',units='N m-2',) ,) 
                 Xo['upwp'] = Dar
                 if( verbose==True):
                     print( f"Finshed with UpWp " , flush=True )
     
+                # - vpwp
                 vpwpO= vpO * wpO 
                 vpwpOx2    = RgF.Horz(xfld_Src=vpwpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
                 vpwpOx2x1R = RgF.Horz(xfld_Src=vpwpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
-                Dar = xr.DataArray( data=vpwpOx2x1R.reshape(nt,nz,ny,nx), 
+                # This scales vpwp back to momentum flux in N m-2
+                for k in np.arange( nz ):
+                    vpwpOx2x1R[:,k,:,:] = rhoprx[k] * vpwpOx2x1R[:,k,:,:]
+                Dar = xr.DataArray( data=vpwpOx2x1R , 
                                     dims=('time','lev','lat','lon',),
-                                    attrs=dict( long_name='x-momentum flux',units='m+2 s-2',) ,) 
+                                    attrs=dict( long_name='y-momentum flux',units='N m-2',) ,) 
                 Xo['vpwp'] = Dar
                 if( verbose==True):
                     print( f"Finshed with VpWp " , flush=True )
 
-                
+                # - wptp
+                tpwpO= vpO * wpO 
+                tpwpOx2    = RgF.Horz(xfld_Src=tpwpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
+                tpwpOx2x1R = RgF.Horz(xfld_Src=tpwpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
+                Dar = xr.DataArray( data=tpwpOx2x1R , 
+                                    dims=('time','lev','lat','lon',),
+                                    attrs=dict( long_name='vert temperature flux',units='K m s-1',) ,) 
+                Xo['wptp'] = Dar
+                if( verbose==True):
+                    print( f"Finshed with WpTp " , flush=True )
+
+                #####################
+                # quadratic moments 
+                ####################
+                # - wp2
+                wpwpO= wpO * wpO 
+                wpwpOx2    = RgF.Horz(xfld_Src=wpwpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
+                wpwpOx2x1R = RgF.Horz(xfld_Src=wpwpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
+                Dar = xr.DataArray( data=tpwpOx2x1R , 
+                                    dims=('time','lev','lat','lon',),
+                                    attrs=dict( long_name='w-prime-squared',units='m+2 s-2',) ,) 
+                Xo['wp2'] = Dar
+                if( verbose==True):
+                    print( f"Finshed with Wp2 " , flush=True )
+
+                # - tp2
+                tptpO= tpO * tpO 
+                tptpOx2    = RgF.Horz(xfld_Src=tptpO , Src='ne240pg3', Dst='ne16pg3' , RegridObj_In=  RgOb_ne240_x_ne16  ) 
+                tptpOx2x1R = RgF.Horz(xfld_Src=tptpOx2 ,  Src='ne16pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne16_x_fv1x1  ) 
+                Dar = xr.DataArray( data=tpwpOx2x1R , 
+                                    dims=('time','lev','lat','lon',),
+                                    attrs=dict( long_name='T-prime-squared',units='K+2',) ,) 
+                Xo['tp2'] = Dar
+                if( verbose==True):
+                    print( f"Finshed with Tp2 " , flush=True )
+
+
+                ####################################################################
+                # Regrid some dyn fields from ne240 ==> fv1x1 in standard way
+                ####################################################################
                 for var in regrid_list:
                     varO = X[var].values
+                    
+                    attribs = X[var].attrs
+                    if ('long_name' in attribs):
+                        longname = attribs['long_name']
+                    else:
+                        longname = 'n/a'
+                    if ('units' in attribs):
+                        units = attribs['units']
+                    else:
+                        units = 'n/a'
+                    
                     if ('lev' in X[var].dims):
                         vdims = ('time','lev','lat','lon',)
                         reshp = [ nt,nz,ny,nx ]
@@ -245,9 +325,10 @@ def drive(write_file=True, return_dataset=False, verbose=False ):
                 
                     varOx1R = RgF.Horz(xfld_Src=varO ,  Src='ne240pg3' , Dst='fv1x1', RegridObj_In=  RgOb_ne240_x_fv1x1  ) 
                     
-                    Dar = xr.DataArray( data=varOx1R.reshape( reshp ), 
+                    #Dar = xr.DataArray( data=varOx1R.reshape( reshp ), 
+                    Dar = xr.DataArray( data=varOx1R , 
                                         dims=vdims ,
-                                        attrs=dict( long_name='x-momentum flux',units='m+2 s-2',) ,) 
+                                        attrs=dict( long_name=longname,units=units,) ,) 
                     Xo[var] = Dar
                     if( verbose==True):
                         print( f"Finshed with {var}" , flush=True )

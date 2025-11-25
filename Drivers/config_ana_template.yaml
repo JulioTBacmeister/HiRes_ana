@@ -1,12 +1,12 @@
 Case: c153_topfix_ne240pg3_FMTHIST_xic_x02
 Archive_base:  #if empty defaults /glade/derecho/scratch/juliob/archive/
-Output_abs_dir: # if specified will write data here. if empty defaults to {archive_base}/{case}/atm/fv1x1
+Output_abs_dir: /glade/derecho/scratch/juliob/archive/c153_topfix_ne240pg3_FMTHIST_xic_x02/atm/fv1x1 # if specified will write data here. if empty defaults to {archive_base}/{case}/atm/fv1x1
 day: 99 # if this is '*' or 99, code will go through the entire month
 hour: 99 # if this is '*' or 99, code will go through the entire day at above frequency
-month: 10
+month: 6
 year: 2004
 hsPat: cam.h3i
 varlist: ['PS','PTTEND','THLP2_CLUBB','UPWP_CLUBB','VPWP_CLUBB','WP2_CLUBB',]
-Resubmit: -1
-StepBy: hour
-StepN: 6
+Resubmit: 8
+StepBy: month
+StepN: 1
