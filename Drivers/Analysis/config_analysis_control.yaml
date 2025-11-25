@@ -1,0 +1,14 @@
+Archive_base: null
+Case: c153_topfix_ne240pg3_FMTHIST_xic_x02
+Src: fv1x1
+SrcVgrid: L93
+Output_abs_dir: /glade/derecho/scratch/juliob/archive/c153_topfix_ne240pg3_FMTHIST_xic_x02/atm/fv1x1
+Resubmit: -1
+StepBy: month
+StepN: 1
+day: 99
+frequency: null
+hour: 99
+hsPat: cam.h3i
+month: 6
+year: 2004
