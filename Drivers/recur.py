@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Import packages 
 import os
+import argparse
 import subprocess as sp
 import update_config as uc
 from mpi4py import MPI
@@ -13,9 +14,27 @@ from mpi4py import MPI
 
 def main():
 
-    
-    config_file_path = "./config_ana.yaml"  # Specify the path to your config file
-    shell_script = "PyBatch_HRana.csh"
+    parser = argparse.ArgumentParser(
+        description="Recursive resubmission driver for HR analysis"
+    )
+    parser.add_argument(
+        "--config",
+        dest="config_file_path",
+        default="./config_ana.yaml",
+        help="Path to YAML configuration file (default: ./config_ana.yaml)"
+    )
+
+    parser.add_argument(
+        "--script",
+        dest="shell_script",
+        default="PyBatch_HRana.csh",
+        help="Path to YAML configuration file (default: ./config_ana.yaml)"
+    )
+
+    args = parser.parse_args()
+    config_file_path = args.config_file_path
+ 
+    shell_script = args.shell_script  #"PyBatch_HRana.csh"
 
     config = uc.read_config_yaml( config_file_path )
     print( config , flush=True )
@@ -37,7 +56,7 @@ def main():
         rank = comm.Get_rank()
 
         if (rank == 0):
-            print(f" Resubmitting myself via qsub ", flush=True)
+            print(f" Resubmitting me {shell_script} via qsub ", flush=True)
             
             sp.run(f"qsub {shell_script}", 
                    shell=True )

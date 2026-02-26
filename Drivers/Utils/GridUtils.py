@@ -182,7 +182,7 @@ def gridInfo( grid=None , **kwargs ):
     elif (grid == 'ne30pg3'):
         Hkey = 'c'
         type='mesh'
-        scrip = cesm_inputdata_dir+'share/scripgrids/ne30pg3_scrip_170611.nc'
+        scrip = cesm_inputdata_dir+'share/scripgrids/ne30pg3_scrip_170417.nc'   # ne30pg3_scrip_170611.nc'
         #TopoFile = cesm_inputdata_dir+'atm/cam/topo/ne30pg3_gmted2010_modis_bedmachine_nc3000_Laplace0100_20230105.nc'
         TopoFile = '/glade/campaign/cgd/amp/pel/topo/files/se/ne30pg3_gmted2010_modis_bedmachine_nc3000_Laplace0100_noleak_20240117.nc'
         p_00 = 100_000.
@@ -305,6 +305,13 @@ def gridInfo( grid=None , **kwargs ):
         type='mesh'
         scrip = cesm_inputdata_dir+'share/scripgrids/mpasa120_SCRIP_desc_211008.nc'
         TopoFile = cesm_inputdata_dir+'atm/cam/topo/mpas/mpasa120_gmted2010_modis_bedmachine_nc3000_Laplace0100_noleak_20240507.nc'
+        p_00 = 100_000.
+
+    elif ((grid == 'mpasa3_75') or (grid == 'mpasa3p75')):
+        Hkey = 'c'
+        type='mesh'
+        scrip = myGridFiles+'/Scrip/mpasa3.75_SCRIP_desc-20210803.nc'
+        TopoFile = 'N/A'
         p_00 = 100_000.
 
     elif ((grid == 'fv0.9x1.25') or (grid=='fv1x1')):

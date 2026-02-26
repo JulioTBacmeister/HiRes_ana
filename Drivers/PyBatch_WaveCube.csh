@@ -1,12 +1,12 @@
-#PBS -N HRproc
+#PBS -N WaveC
 ### Charging account
 #PBS -A P93300042 
 ### Request one chunk of resources with N CPU and M GB of memory
-#PBS -l select=1:ncpus=1:mem=200GB
-###PBS -l select=1:ncpus=1:mem=300GB
+###PBS -l select=1:ncpus=1:mem=64GB
+#PBS -l select=1:ncpus=1:mem=300GB
 ### 
 ####PBS -l walltime=09:00:00
-#PBS -l walltime=02:15:00
+#PBS -l walltime=02:00:00
 ### Route the job to the casper queue
 #PBS -q casper
 ### Join output and error streams into single file
@@ -14,7 +14,7 @@
 
 module load conda
 
-conda activate npl-2026a
+conda activate npl-2025b
 
 #-------------------------------------
 # The Python code called below is
@@ -30,8 +30,9 @@ echo "Cruising .... "
 #-----------------------------------------------
 find . -type f -name "HRproc.o*" -mmin +10 -exec rm {} \;
 
-#./regrid_MPAS3_75km.py
-./regrid_HRxLR.py
-./regrid_genl.py
-./recur.py         #--config config_mpas_ana.yaml
+./regrid_wavecube.py
+
+#./regrid_HRxLR.py
+#./regrid_genl.py
+#./recur.py
 

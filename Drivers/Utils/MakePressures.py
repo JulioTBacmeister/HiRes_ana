@@ -14,8 +14,19 @@ grav = Con.grav() # 9.8
 # Jan 2024
 #    - 'np.int' wont work with npl-2023b change to 'int'
 
-def Pressure ( am, bm, ai, bi, ps , p_00=100_000., Gridkey='tzc' ):
+def Pressure ( X=None, am=None, bm=None, ai=None, bi=None, ps=None , p_00=100_000., Gridkey='tzc' ):
     # Should ASSERT that am ,bm, ai, and bi are 1D
+
+    if ( X is None ):
+        print( "X is None " )
+    else:
+        print( "X is present " )
+        am=X.hyam.values
+        bm=X.hybm.values
+        ai=X.hyai.values
+        bi=X.hybi.values
+        if ('PS' in X):
+            ps=X.PS.values
 
     if ( Gridkey == 'zc' ):
         ncol = np.shape( ps )
@@ -92,13 +103,20 @@ def GeopHeight( te, delp, pmid, topo=None , Gridkey='tzc'):
             z3e[:,z,:] = z3e[:,z+1,:] + delz[:,z,:]   #/(grav*rho[:,z,:])
             ##z3e[:,z,:] = z3e[:,z+1,:] + delz[:,z,:]   #/(grav*rho[:,z,:])
 
-        # Add topo_x to all levels of z3e
-        #z3e += topo_x[:, None, :]
-
         z3o = 0.5*( z3e[:,1:,:]+z3e[:,0:-1,:]  )
     
     elif (Gridkey=='tzyx'):
         nt,nz,ny,nx=np.shape( te )
+        z3e=np.zeros((nt,nz+1,ny,nx))
+        if (topo is None):
+            topo_x = np.zeros( (nt,ny,nx) )
+        else:
+            topo_x = np.tile( topo, (nt,1,1) )
+        z3e[:,nz,:,:]=topo_x
+        for z in np.arange( start=nz-1,stop=-1,step=-1):
+            z3e[:,z,:,:] = z3e[:,z+1,:,:] + delz[:,z,:,:]   #/(grav*rho[:,z,:])
+
+        z3o = 0.5*( z3e[:,1:,:]+z3e[:,0:-1,:]  )
     elif (Gridkey=='zyx'):
         nz,ny,nx=np.shape( te )
     elif (Gridkey=='zc'):

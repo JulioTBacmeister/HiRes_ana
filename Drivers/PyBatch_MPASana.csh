@@ -1,4 +1,4 @@
-#PBS -N HRproc
+#PBS -N MPproc
 ### Charging account
 #PBS -A P93300042 
 ### Request one chunk of resources with N CPU and M GB of memory
@@ -28,10 +28,8 @@ echo "Cruising .... "
 
 # remove logs that are more than 10 minutes old.
 #-----------------------------------------------
-find . -type f -name "HRproc.o*" -mmin +10 -exec rm {} \;
+find . -type f -name "MPproc.o*" -mmin +10 -exec rm {} \;
 
-#./regrid_MPAS3_75km.py
-./regrid_HRxLR.py
-./regrid_genl.py
-./recur.py         #--config config_mpas_ana.yaml
+./regrid_MPAS3p75km.py
+./recur.py --config config_mpas_ana.yaml --script PyBatch_MPASana.csh
 

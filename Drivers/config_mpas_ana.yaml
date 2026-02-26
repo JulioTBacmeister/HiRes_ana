@@ -1,0 +1,21 @@
+Archive_base: null
+Case: null
+Dst: null
+DstVgrid: null
+Output_abs_dir: null
+Resubmit: -1
+StepBy: hour
+StepN: 3
+day: 5
+frequency: null
+hour: 6
+hsPat: cam.h3i
+month: 8
+varlist:
+- PS
+- PTTEND
+- THLP2_CLUBB
+- UPWP_CLUBB
+- VPWP_CLUBB
+- WP2_CLUBB
+year: 2016
