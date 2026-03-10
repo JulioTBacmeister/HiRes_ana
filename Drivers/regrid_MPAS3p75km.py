@@ -38,6 +38,7 @@ def drive():
     date_=f"{year:04d}-{month:02d}-{day:02d}-{hour*3_600:05d}"
     print( f"Processing MPAS 3.75km for {date_}", flush=True)
     case=f"cam77_dyamond1_prod1"   #f"c124_dyamond1_prod2"
+    #case=f"c124_dyamond1_prod2"
     SrcDir = f"/glade/campaign/cesm/km-scale/archive/{case}/atm/hist"
     #WrkDir = f"/glade/derecho/scratch/juliob/mpasa3p75km/{date_}"
     WrkDir = f"/glade/campaign/cgd/amp/juliob/mpasa3p75km/{case}/{date_}"
@@ -72,8 +73,9 @@ def drive():
     #   Regrid time-invariant grid files like zgrid to fv1x1
     #############################################################
     #            1        2       3       4       5       6       7       8       9       10
-    do_steps =[ True ,  True  , True ,  True  , True  ,  False , True  , True  , True  , False , ]  # Basic processing
-    #do_steps =[ True , False  , False , False , False ,  False , False , False , False , False , ] 
+    #do_steps =[ True ,  True  , True ,  True  , True  ,  False , True  , True  , True  , False , ]  # Basic processing
+    do_steps =[ False , False  , False , False , False , False , False , False , True  , False , ] 
+     #do_steps =[ True , False  , False , False , False ,  False , False , False , False , False , ] 
 
     """
     do_steps =[ False , False , False , False , False , False , True  , True  , True  , False , ] 
@@ -112,13 +114,18 @@ def drive():
                 f"ncks -O -v {varx},lat,lon {infile} {tmp1x}",
                ]
 
+            
+            # DISABLE IF 'fld' FILES ARE ALREADY EXTRACTED
             for c in cmds:
                 print("Running:", c, flush=True )
                 result = subprocess.run(c, shell=True)
             
                 if result.returncode != 0:
                     raise RuntimeError(f"Command failed: {c}")
-            
+            """
+            for c in cmds:
+                print ( f" SKIPPED {c} because already there ", flush=True )
+            """            
             if ( (case=='cam77_dyamond1_prod1') and (var in ['w_mpas','theta_mpas','rho_mpas',]) ):
                 # This will create tmp1 from tmp1x 
                 status = fix_cam77_run( tmp1x, tmp1, varx, var )
@@ -590,8 +597,21 @@ def drive():
             var = os.path.basename(f).split("_dyamond_")[0]
             print( f"{var} in {f} ",flush=True )
             X2 = xr.open_dataset( f )
-            X[var] = X2[var]
+            #X[var] = X2[var]
+            # More convoluted strategy needed fro cam77 since probably
+            # reconfiguring {w,theta,rho} to {...}_mpas has effed up time 
+            # coord ... leading to 'alignment' catastrophe with simple 
+            # line above (per ChatGPT)
+            X[var] = xr.DataArray(
+                X2[var].values,
+                dims=X2[var].dims
+            )
 
+        print( f"Upwp value range :, {np.min(X.Upwp.values)} , {np.max(X.Upwp.values)}", flush=True )
+        print( list(X.variables) , flush=True )
+        print( f"Vpwp value range :, {np.min(X.Vpwp.values)} , {np.max(X.Vpwp.values)}", flush=True )
+        print( list(X.variables) , flush=True )
+        print( f"Tpwp value range :, {np.min(X.Tpwp.values)} , {np.max(X.Tpwp.values)}", flush=True )
         print( list(X.variables) , flush=True )
 
         X.to_netcdf( outfile )
@@ -664,7 +684,7 @@ def fix_cam77_run( tmp1x, tmp1, varx, var ):
         )
     
     Xo = xr.Dataset( coords=coords  )
-    
+    Xo.coords['time']=X.coords['time']
     
     
     lon=X.lon.values

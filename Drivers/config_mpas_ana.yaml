@@ -3,12 +3,12 @@ Case: null
 Dst: null
 DstVgrid: null
 Output_abs_dir: null
-Resubmit: -1
+Resubmit: 192
 StepBy: hour
 StepN: 3
-day: 5
+day: 27
 frequency: null
-hour: 6
+hour: 3
 hsPat: cam.h3i
 month: 8
 varlist:
