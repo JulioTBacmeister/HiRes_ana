@@ -106,7 +106,81 @@ def find_gw_events_watershed(epwp, thresh):
 
     return events
 
-import numpy as np
+def composite4D( event_list, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_range=[-90,90], lon_range=[0,360] ):
+    #################################################################################################################
+    #  Returns a 4D (note vertical dim is constant) picture of input aa around events in event_list. 
+    #  Size of picture is determined by window argument, where window=[wt,wy,wx] ; itime,ilat,ilon resp.
+
+    nt_e = len( event_list )
+
+    latS,latN=lat_range[0],lat_range[1]
+    lonW,lonE=lon_range[0],lon_range[1]
+
+    
+    if TZHkey == 'tzyx':
+        nt_aa,nz,ny,nx = np.shape( aa )
+    elif TZHkey == 'tyx':
+        nt_aa,ny,nx = np.shape( aa )
+    else:
+        print( "Not set up for this array shape " )
+        return -999
+
+    if (nt_e != nt_aa ):
+        print( "Inconsistent time in events and array" )
+        return -999
+        
+    count=0
+    #for evs in event_list:
+    #    for ev in evs:
+    for t in np.arange(nt_e):
+        evs = event_list[t]
+        nev = len( evs )
+        for e in np.arange( nev ):
+            ev = evs[e]
+            lat0=lat[ ev['iy'] ]
+            lon0=lon[ ev['ix'] ]
+            if (lat0>=latS) and (lat0<=latN) and (lon0>=lonW) and (lon0<=lonE):
+                count=count+1
+    
+    print( count )
+
+    wt,wy,wx = window
+    if TZHkey == 'tzyx':
+        aa_pad = np.pad(aa, ((wt, wt), (0, 0), (wy, wy), (0, 0)), mode='edge')
+        aa_pad = np.pad(aa_pad, ((0, 0), (0, 0), (0, 0), (wx, wx)), mode='wrap')
+        aa_comp = np.zeros( ( count , wt+1, nz, 2*wy+1, 2*wx+1 )  )
+    elif TZHkey == 'tyx':
+        aa_pad = np.pad(aa, ((wt, wt), (wy, wy), (0, 0)), mode='edge')
+        aa_pad = np.pad(aa_pad, ((0, 0), (0, 0), (wx, wx)), mode='wrap')
+        aa_comp = np.zeros( ( count , wt+1, 2*wy+1, 2*wx+1 )  )
+    c=0
+    #for evs in event_list:
+    #    for ev in evs:
+    for t in np.arange(nt_e):
+        evs = event_list[t]
+        nev = len( evs )
+        for e in np.arange( nev ):
+            ev = evs[e]
+            lat0=lat[ ev['iy'] ]
+            lon0=lon[ ev['ix'] ]
+            if (lat0>=latS) and (lat0<=latN) and (lon0>=lonW) and (lon0<=lonE):
+                y=ev['iy'] + wy
+                x=ev['ix'] + wx
+                t_ = t + wt
+                if TZHkey == 'tzyx':
+                    aa_comp[c, 0:wt+1, :,0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1, :, y-wy:y+wy+1, x-wx:x+wx+1 ] 
+                elif TZHkey == 'tyx':
+                    aa_comp[c, 0:wt+1, 0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1 ,y-wy:y+wy+1,x-wx:x+wx+1]                 
+                c=c+1
+    
+    print( c )
+    
+    
+    #for t in np.arange( nt ):
+    #    for ie in np.arange( nevs ):
+    return aa_comp
+
+
 
 def track_events(event_lists, max_dist=5):
     """
