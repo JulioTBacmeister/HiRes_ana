@@ -1,8 +1,30 @@
 import numpy as np
+
 from scipy.ndimage import label
 from scipy import ndimage as ndi
+from scipy import stats
+
 from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
+
+import matplotlib.pyplot as plt
+
+# This allows for both dict.key and dict['key'] syntax
+class AttrDict(dict):
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(f"'AttrDict' object has no attribute '{key}'")
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+    def __delattr__(self, key):
+        try:
+            del self[key]
+        except KeyError:
+            raise AttributeError(f"'AttrDict' object has no attribute '{key}'")
 
 
 def find_gw_events(epwp, thresh, connectivity=8):
@@ -67,6 +89,11 @@ def find_gw_events_watershed(epwp, thresh):
 
     mask = epwp > thresh
 
+
+    #print( f" size of True - epwp>{thresh} = {np.sum(mask)}  " )
+    #print( f" size of epwp = {np.size(epwp)} " )
+
+    
     # distance field helps watershed separate peaks
     distance = ndi.distance_transform_edt(mask)
 
@@ -87,6 +114,7 @@ def find_gw_events_watershed(epwp, thresh):
 
     events = []
 
+    count = 0
     for i in range(1, labels.max()+1):
 
         region = labels == i
@@ -103,10 +131,13 @@ def find_gw_events_watershed(epwp, thresh):
             "size": len(vals),
             "epwp_sum": vals.sum()
         })
+        count=count+1
 
+    #print( f" Culled down to {count} 'events'" )
+        
     return events
 
-def composite4D( event_list, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_range=[-90,90], lon_range=[0,360] ):
+def cube4D( event_list, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_range=[-90,90], lon_range=[0,360] ):
     #################################################################################################################
     #  Returns a 4D (note vertical dim is constant) picture of input aa around events in event_list. 
     #  Size of picture is determined by window argument, where window=[wt,wy,wx] ; itime,ilat,ilon resp.
@@ -142,7 +173,7 @@ def composite4D( event_list, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_
             if (lat0>=latS) and (lat0<=latN) and (lon0>=lonW) and (lon0<=lonE):
                 count=count+1
     
-    print( count )
+    #print( count )
 
     wt,wy,wx = window
     if TZHkey == 'tzyx':
@@ -173,14 +204,109 @@ def composite4D( event_list, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_
                     aa_comp[c, 0:wt+1, 0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1 ,y-wy:y+wy+1,x-wx:x+wx+1]                 
                 c=c+1
     
-    print( c )
+    #print( c )
     
     
     #for t in np.arange( nt ):
     #    for ie in np.arange( nevs ):
     return aa_comp
 
+def cube4D_ds( event_ds, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_range=[-90,90], lon_range=[0,360], mask2D=None ):
+    #################################################################################################################
+    #  Returns a 4D (note vertical dim is constant) picture of input aa around events in event_list. 
+    #  Size of picture is determined by window argument, where window=[wt,wy,wx] ; itime,ilat,ilon resp.
 
+    latS,latN=lat_range[0],lat_range[1]
+    lonW,lonE=lon_range[0],lon_range[1]
+
+    
+    if TZHkey == 'tzyx':
+        nt_aa,nz,ny,nx = np.shape( aa )
+    elif TZHkey == 'tyx':
+        nt_aa,ny,nx = np.shape( aa )
+    else:
+        print( "Not set up for this array shape " )
+        return -999
+        
+    count=0
+    lon_event=event_ds.lon_event.values
+    lat_event=event_ds.lat_event.values
+    nv = len( lat_event )
+    for v in np.arange(nv):
+        lat0=lat_event[ v ]
+        lon0=lon_event[ v ]
+        if (lat0>=latS) and (lat0<=latN) and (lon0>=lonW) and (lon0<=lonE):
+            count=count+1
+    
+    #print( count )
+
+    #return 999999.
+    
+    wt,wy,wx = window
+    if TZHkey == 'tzyx':
+        aa_pad = np.pad(aa, ((wt, wt), (0, 0), (wy, wy), (0, 0)), mode='edge')
+        aa_pad = np.pad(aa_pad, ((0, 0), (0, 0), (0, 0), (wx, wx)), mode='wrap')
+        aa_comp = np.zeros( ( count , wt+1, nz, 2*wy+1, 2*wx+1 )  )
+    elif TZHkey == 'tyx':
+        aa_pad = np.pad(aa, ((wt, wt), (wy, wy), (0, 0)), mode='edge')
+        aa_pad = np.pad(aa_pad, ((0, 0), (0, 0), (wx, wx)), mode='wrap')
+        aa_comp = np.zeros( ( count , wt+1, 2*wy+1, 2*wx+1 )  )
+
+    time_comp = np.zeros( ( count )  )
+    lat_comp = np.zeros( ( count )  )
+    lon_comp = np.zeros( ( count )  )
+
+    c=0
+    ix_event=event_ds.ix.values
+    iy_event=event_ds.iy.values
+    it_event=event_ds.itime.values
+    for v in np.arange( nv ):
+        lat0=lat_event[ v ]
+        lon0=lon_event[ v ]
+        if (lat0>=latS) and (lat0<=latN) and (lon0>=lonW) and (lon0<=lonE):
+            t=it_event[v]
+            y=iy_event[v] + wy
+            x=ix_event[v] + wx
+            t_ = t + wt
+            if TZHkey == 'tzyx':
+                aa_comp[c, 0:wt+1, :,0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1, :, y-wy:y+wy+1, x-wx:x+wx+1 ] 
+            elif TZHkey == 'tyx':
+                aa_comp[c, 0:wt+1, 0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1 ,y-wy:y+wy+1,x-wx:x+wx+1]                 
+            time_comp[c] , lat_comp[c] , lon_comp[c] = t, lat0, lon0
+            c=c+1
+    
+    #print( c )
+    
+    
+    #for t in np.arange( nt ):
+    #    for ie in np.arange( nevs ):
+    return aa_comp,time_comp,lat_comp,lon_comp
+
+def collapseSpace( aa_comp  , TZHkey='etzyx'  ):
+
+    if TZHkey == 'etzyx':
+        nc,nt,nz,ny,nx = np.shape( aa_comp )
+        aa_comp_mean = aa_comp.mean(axis=(3,4))
+        aa_comp_min  = aa_comp.min(axis=(3,4))
+        aa_comp_max  = aa_comp.max(axis=(3,4))    
+    elif TZHkey == 'etyx':
+        nc,nt,ny,nx = np.shape( aa_comp )
+        aa_comp_mean = aa_comp.mean(axis=(2,3))
+        aa_comp_min  = aa_comp.min(axis=(2,3))
+        aa_comp_max  = aa_comp.max(axis=(2,3))    
+    else:
+        print( f"no valid shape" )
+
+    return aa_comp_mean,aa_comp_min,aa_comp_max
+
+def collapseSpaceTime( aa_comp  , TZHkey='etzyx'  ):
+    
+    aa_MMM = collapseSpace( aa_comp  , TZHkey=TZHkey )
+    aa_super_mean = aa_MMM[0].mean( axis=1 )
+    aa_super_min = aa_MMM[1].min( axis=1 )
+    aa_super_max = aa_MMM[2].max( axis=1 )
+
+    return aa_MMM, aa_super_mean,aa_super_min, aa_super_max
 
 def track_events(event_lists, max_dist=5):
     """
@@ -247,7 +373,336 @@ def track_events(event_lists, max_dist=5):
 
     return tracks
 
+def ddz_var(f, z):
+    """
+    Vertical derivative df/dz for f(nt,nz,ny,nx) with z(nt,nz,ny,nx).
+
+    Uses centered differences in the interior and one-sided differences
+    at the top/bottom.
+    """
+    dfdz = np.empty_like(f)
+
+    # bottom
+    dfdz[:, 0, :, :] = (
+        f[:, 1, :, :] - f[:, 0, :, :]
+    ) / (
+        z[:, 1, :, :] - z[:, 0, :, :]
+    )
+
+    # top
+    dfdz[:, -1, :, :] = (
+        f[:, -1, :, :] - f[:, -2, :, :]
+    ) / (
+        z[:, -1, :, :] - z[:, -2, :, :]
+    )
+
+    # interior: centered
+    dfdz[:, 1:-1, :, :] = (
+        f[:, 2:, :, :] - f[:, :-2, :, :]
+    ) / (
+        z[:, 2:, :, :] - z[:, :-2, :, :]
+    )
+
+    return dfdz
+
+
+def tiltmag(u, v, zeta, zm):
+    """
+    Compute
+
+        tilt = || zeta * du/dz, zeta * dv/dz ||
+
+    for arrays shaped (nt,nz,ny,nx).
+    """
+    du_dz = ddz_var(u, zm)
+    dv_dz = ddz_var(v, zm)
+
+    tilt = np.sqrt( (zeta * du_dz)**2 + (zeta * dv_dz)**2 )
+    return tilt
+
+def one_dim_pdf(x , nbin=50, log=False, density=True ):
+
+    x = x[np.isfinite(x)]
+
+    if log==True:
+        x = x[x > 0.0]
+        bins = np.logspace(np.log10(x.min()), np.log10(x.max()), nbin + 1)
+        # Bin centers
+        xcens = np.sqrt(bins[:-1] * bins[1:])
+    else:
+        bins = np.linspace(x.min(), x.max(), nbin + 1)
+        # Bin centers
+        xcens = 0.5*( bins[:-1] + bins[1:] )
+        
+    
+    # Which bin each value falls into
+    ibin = np.digitize(x, bins) - 1
+    
+    # Sum of x within each bin
+    count1d = np.zeros(nbin)
+    
+    for i in range(nbin):
+        m = ibin == i
+        count1d[i] = np.sum(x[m])
+        
+    if density==False:
+        return count1d,xcens
+    
+    dx = np.diff(bins)          # shape (nxbin,)
+    
+    pdf1d = count1d / len(x) / dx
+
+    return pdf1d,xcens
+
+def two_dim_pdf(x,y,nxbin=50,nybin=50,logx=False,logy=False, density=True ):
+    
+    # x, y are 1D arrays of same length
+    # for example: x = np.abs(upwp), y = np.abs(zeta)
+    
+    m = np.isfinite(x) & np.isfinite(y)
+    x = x[m]
+    y = y[m]
+    
+    if logx==True:
+        xbins = np.logspace(np.log10(x.min()), np.log10(x.max()), nxbin + 1)
+        # bin centers: geometric mean is best for log bins
+        xcens = np.sqrt(xbins[:-1] * xbins[1:])
+    else:
+        xbins = np.linspace(x.min(), x.max(), nxbin + 1)
+        xcens = 0.5*(xbins[:-1] + xbins[1:])
+        
+    if logy==True:
+        ybins = np.logspace(np.log10(y.min()), np.log10(y.max()), nybin + 1)
+        # bin centers: geometric mean is best for log bins
+        ycens = np.sqrt(ybins[:-1] * ybins[1:])
+    else:
+        ybins = np.linspace(y.min(), y.max(), nxbin + 1)
+        ycens = 0.5*(ybins[:-1] + ybins[1:])
+    
+    ibin = np.digitize(x, xbins) - 1
+    jbin = np.digitize(y, ybins) - 1
+    
+    # protect against points on the upper edge
+    ibin = np.clip(ibin, 0, nxbin - 1)
+    jbin = np.clip(jbin, 0, nybin - 1)
+    
+    count2d = np.zeros((nxbin, nybin))
+    
+    for i in range(nxbin):
+        for j in range(nybin):
+            m = (ibin == i) & (jbin == j)
+            count2d[i, j] = np.sum(m)
+
+    if density==False:
+        return count2d,xcens,ycens
+    
+    dx = np.diff(xbins)          # shape (nxbin,)
+    dy = np.diff(ybins)          # shape (nybin,)
+    
+    area = dx[:, None] * dy[None, :]   # shape (nxbin, nybin)
+    
+    pdf2d = count2d / len(x) / area
+
+    return pdf2d,xcens,ycens
+
+def loglogpdf(epwp):
+
+
+    # upwp: flat 1D ndarray
+    x = epwp  #np.abs(upwp)                      # magnitudes
+    x = x[np.isfinite(x)]                 # remove NaN/inf
+    x = x[x > 0.0]                        # log scale cannot use zero
+    
+    # log-spaced bins
+    nbins = 50
+    bins = np.logspace(np.log10(x.min()), np.log10(x.max()), nbins + 1)
+    
+    # PDF estimate from histogram
+    pdf, edges = np.histogram(x, bins=bins, density=True)
+    
+    # bin centers: geometric mean is best for log bins
+    centers = np.sqrt(edges[:-1] * edges[1:])
+    
+    # plot
+    fig, ax = plt.subplots()
+    ax.plot(centers, pdf, marker='o', linestyle='-')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    
+    ax.set_xlabel('|upwp|')
+    ax.set_ylabel('PDF')
+    ax.set_title('Log-log PDF of |upwp|')
+
+def contrib_to_total(epwp):
+
+    x = epwp # np.abs(upwp)
+    x = x[np.isfinite(x)]
+    x = x[x > 0.0]
+    
+    nbins = 50
+    bins = np.logspace(np.log10(x.min()), np.log10(x.max()), nbins + 1)
+    
+    # Which bin each value falls into
+    ibin = np.digitize(x, bins) - 1
+    
+    # Sum of |upwp| within each bin
+    bin_sum = np.zeros(nbins)
+    
+    for i in range(nbins):
+        m = ibin == i
+        bin_sum[i] = np.sum(x[m])
+    
+    # Fractional contribution of each bin to total |upwp|
+    frac = bin_sum / np.sum(bin_sum)
+    
+    # Bin centers
+    centers = np.sqrt(bins[:-1] * bins[1:])
+    
+    # Plot
+    fig, ax = plt.subplots()
+    
+    m = frac > 0
+    ax.plot(centers[m], frac[m], marker='o')
+    
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    
+    ax.set_xlabel('|upwp|')
+    ax.set_ylabel('Fraction of total |upwp|')
+    ax.set_title('Contribution of each |upwp| bin to total magnitude')
+
+    
+
+def cumul_big_to_small(epwp):
+
+    x = epwp # np.abs(upwp)
+    x = x[np.isfinite(x)]
+    x = x[x > 0.0]
+    
+    # sort ascending
+    xs = np.sort(x)
+    
+    # cumulative sum from the top tail downward
+    tail_sum = np.cumsum(xs[::-1])[::-1]
+    tail_frac = tail_sum / tail_sum[0]
+    
+    fig, ax = plt.subplots()
+    ax.plot(xs, tail_frac)
+    
+    ax.set_xscale('log')
+    ax.set_xlabel('X')
+    ax.set_ylabel(r'Fraction of total |upwp| from values >= X')
+    ax.set_title(r'Tail contribution of $|upwp|$')
 
 
 
+def event_composite_correlation(A_4D, composite=None, CorrKey='tzyx'):
+    """
+    Compute spatial correlation of each event with the composite mean.
+    
+    Parameters
+    ----------
+    A_4D : np.ndarray, shape (n_events, n_t, n_z, n_y, n_x)
+        The 4D column data for each event.
+    composite : np.ndarray or None
+        Precomputed composite (mean over events). If None, computed from A_4D.
+        Shape should be (n_t, n_z, n_y, n_x).
+    CorrKey : str
+        Which dimensions to correlate over:
+        'tzyx' -> scalar r per event,        output shape (n_events,)
+        'tyx'  -> z profile per event,        output shape (n_events, n_z)
+        'yx'   -> (t,z) array per event,      output shape (n_events, n_t, n_z)
+    
+    Returns
+    -------
+    r : np.ndarray
+        Pearson r of each event against the composite.
+    p : np.ndarray
+        Two-tailed p-values, same shape as r.
+    summary : dict
+        Mean r, std r, median r, outlier threshold and indices.
+        For non-scalar r, these statistics are computed over events
+        at each (t,z) point.
+    """
+    # --- dimension mapping -------------------------------------------------
+    # A_4D axes:  0=event, 1=t, 2=z, 3=y, 4=x
+    key_to_corr_axes = {
+        'tzyx': (1, 2, 3, 4),   # correlate all -> r shape (n_events,)
+        'tyx':  (1, 3, 4),      # correlate t,y,x -> r shape (n_events, n_z)
+        'yx':   (3, 4),         # correlate y,x   -> r shape (n_events, n_t, n_z)
+    }
+    if CorrKey not in key_to_corr_axes:
+        raise ValueError(f"CorrKey must be one of {list(key_to_corr_axes.keys())}")
 
+    corr_axes = key_to_corr_axes[CorrKey]
+    loop_axes = [ax for ax in (1, 2, 3, 4) if ax not in corr_axes]  # axes we loop over
+
+    n_events          = A_4D.shape[0]
+    n_t, n_z, n_y, n_x = A_4D.shape[1:]
+
+    if composite is None:
+        composite = A_4D.mean(axis=0)  # shape (n_t, n_z, n_y, n_x)
+
+    # --- build output shape ------------------------------------------------
+    # loop_axes refer to A_4D axes 1-4; subtract 1 to index into (n_t,n_z,n_y,n_x)
+    loop_shape = tuple(A_4D.shape[ax] for ax in loop_axes)  # e.g. () or (n_z,) or (n_t,n_z)
+    out_shape  = (n_events,) + loop_shape                   # e.g. (n_events,) or (n_events,n_z)
+
+    r = np.zeros(out_shape)
+    p = np.zeros(out_shape)
+
+    # --- helper: given a loop index tuple, build the slice for A_4D[e] ----
+    # A_4D[e] has axes (t, z, y, x) = axes 0,1,2,3 of the sliced array
+    # corr_axes in A_4D terms are 1,2,3,4 -> subtract 1 for the sliced array
+    corr_axes_local = tuple(ax - 1 for ax in corr_axes)   # axes within A_4D[e]
+    loop_axes_local = tuple(ax - 1 for ax in loop_axes)
+
+    def _get_slice(arr, loop_idx):
+        """Extract the sub-array for one loop-index combination, then flatten corr dims."""
+        # Build a full index: slice(None) for corr axes, integer for loop axes
+        idx = [slice(None)] * 4
+        for ax, i in zip(loop_axes_local, loop_idx):
+            idx[ax] = i
+        return arr[tuple(idx)].flatten()
+
+    # --- iterate over loop index combinations ------------------------------
+    import itertools
+    loop_sizes    = [A_4D.shape[ax] for ax in loop_axes]
+    loop_indices  = list(itertools.product(*[range(s) for s in loop_sizes]))
+
+    if not loop_indices:          # CorrKey='tzyx': single scalar per event
+        loop_indices = [()]
+
+    for loop_idx in loop_indices:
+        comp_vec = _get_slice(composite, loop_idx)
+        for e in range(n_events):
+            event_vec = _get_slice(A_4D[e], loop_idx)
+            r_val, p_val = stats.pearsonr(event_vec, comp_vec)
+            if loop_idx:
+                r[(e,) + loop_idx] = r_val
+                p[(e,) + loop_idx] = p_val
+            else:
+                r[e] = r_val
+                p[e] = p_val
+
+    # --- summary statistics over events ------------------------------------
+    r_mean   = r.mean(axis=0)
+    r_std    = r.std(axis=0)
+    r_median = np.median(r, axis=0)
+    outlier_threshold = r_mean - r_std
+
+    # outlier_idx: events whose mean-r (averaged over any loop dims) is low
+    r_event_mean = r.mean(axis=tuple(range(1, r.ndim))) if r.ndim > 1 else r
+    outlier_idx  = np.where(r_event_mean < r_event_mean.mean() - r_event_mean.std())[0]
+
+    summary_ = {
+        'r_mean':            r_mean,
+        'r_std':             r_std,
+        'r_median':          r_median,
+        'outlier_threshold': outlier_threshold,
+        'outlier_idx':       outlier_idx,
+        'n_outliers':        len(outlier_idx),
+    }
+
+    summary = AttrDict( summary_ )
+    return r, p, summary

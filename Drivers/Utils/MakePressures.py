@@ -13,6 +13,18 @@ grav = Con.grav() # 9.8
 # Notes.
 # Jan 2024
 #    - 'np.int' wont work with npl-2023b change to 'int'
+def asbs_from_ds(X):
+
+    hys = [ 'hyam','hybm','hyai','hybi' ]
+    hyv=[]
+    for hy in hys:
+        hy0 = X[hy].values
+        if ('time' in X[hy].dims ):
+            hy0=hy0[0,:]
+        hyv.append(hy0)
+    
+    return hyv
+
 
 def Pressure ( X=None, am=None, bm=None, ai=None, bi=None, ps=None , p_00=100_000., Gridkey='tzc' ):
     # Should ASSERT that am ,bm, ai, and bi are 1D
@@ -21,10 +33,13 @@ def Pressure ( X=None, am=None, bm=None, ai=None, bi=None, ps=None , p_00=100_00
         print( "X is None " )
     else:
         print( "X is present " )
+        """
         am=X.hyam.values
         bm=X.hybm.values
         ai=X.hyai.values
         bi=X.hybi.values
+        """
+        am,bm,ai,bi = asbs_from_ds(X)
         if ('PS' in X):
             ps=X.PS.values
 

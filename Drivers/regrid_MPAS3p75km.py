@@ -32,22 +32,24 @@ def drive():
     month=int( config['month'] )
     day=config['day']
     hour=config['hour'] 
+    case=config['Case']
+    hs_in = config['hsPat'] #f"h2i"  #f"h1i"
+
+    UHRtag = config['UHRtag']
 
     print( f"Year={year},  Month={month}", flush=True )
 
     date_=f"{year:04d}-{month:02d}-{day:02d}-{hour*3_600:05d}"
     print( f"Processing MPAS 3.75km for {date_}", flush=True)
-    case=f"cam77_dyamond1_prod1"   #f"c124_dyamond1_prod2"
-    #case=f"c124_dyamond1_prod2"
     SrcDir = f"/glade/campaign/cesm/km-scale/archive/{case}/atm/hist"
-    #WrkDir = f"/glade/derecho/scratch/juliob/mpasa3p75km/{date_}"
+
     WrkDir = f"/glade/campaign/cgd/amp/juliob/mpasa3p75km/{case}/{date_}"
     os.makedirs( WrkDir , exist_ok=True )
+
     TimeInvDir = f"/glade/campaign/cgd/amp/juliob/mpasa3p75km/{case}/TimeInvariant"
     os.makedirs( TimeInvDir , exist_ok=True )
 
-    #infile = f"{SrcDir}/c124_dyamond1_prod2.cam.h1i.{date_}.nc"
-    infile = f"{SrcDir}/{case}.cam.h1i.{date_}.nc"
+    infile = f"{SrcDir}/{case}.cam.{hs_in}.{date_}.nc"
 
 
     ###############################################
@@ -74,17 +76,14 @@ def drive():
     #############################################################
     #            1        2       3       4       5       6       7       8       9       10
     #do_steps =[ True ,  True  , True ,  True  , True  ,  False , True  , True  , True  , False , ]  # Basic processing
-    do_steps =[ False , False  , False , False , False , False , False , False , True  , False , ] 
-     #do_steps =[ True , False  , False , False , False ,  False , False , False , False , False , ] 
+    #do_steps =[ False , False  , False , False , False , False , False , False , True  , False , ] 
+    #do_steps =[ True , False  , False , False , False ,  False , False , False , False , False , ] 
 
-    """
-    do_steps =[ False , False , False , False , False , False , True  , True  , True  , False , ] 
-    do_steps =[ True  , True  , False , False , False , False , False , False , False , False , ] 
-    do_steps =[ False , False  , False , False , False , False , False , False , False , False , ] 
-    do_steps =[ False , False  , False , False , False , True  , False , False , False , False , ] 
-    """
+    #do_steps =[ True , False  , False , False , True , False , False , False , False , False , ] 
+    #step1_B_make_background = False
 
-
+    #            1        2       3       4       5       6       7       8       9       10
+    do_steps = config['do_steps'] #[ False , False  , False , False , False , True , False , False , True  , False , ] 
     
     step=1
     if ( do_steps[ step-1 ] == True ):
@@ -93,6 +92,7 @@ def drive():
         #   Extract var and make background
         ###############################################
         vars = ['U','V','T','Q','w_mpas','theta_mpas','rho_mpas','PINT',]
+        vars = ['PRECC','PRECL',]
         #vars = ['w_mpas', 'theta_mpas','rho_mpas', ]
 
         for var in vars:
@@ -130,26 +130,29 @@ def drive():
                 # This will create tmp1 from tmp1x 
                 status = fix_cam77_run( tmp1x, tmp1, varx, var )
 
-            
-            tmp2   = f"{WrkDir}/{var}_dyamond_ne16pg3.nc"
-            outfile= f"{WrkDir}/{var}_dyamond_ne16pg3_mpasa3p75.{date_}.nc"
-
-            cmds = [
-                # conservative remap mpasa3p75km -> ne16pg3
-                "ncremap -m /glade/work/juliob/HiRes_ana_dev/Drivers/mpasa3p75_TO_ne16pg3_cnsrv.nc "
-                f"{tmp1} {tmp2}",
-            
-                # bilinear remap ne16pg3 -> mpasa3p75km
-                "ncremap -m /glade/work/juliob/HiRes_ana_dev/Drivers/ne16pg3_TO_mpasa3p75_bilin.nc "
-                f"{tmp2} {outfile}",
-                ]
-            
-            for c in cmds:
-                print("Running:", c, flush=True )
-                result = subprocess.run(c, shell=True)
-            
-                if result.returncode != 0:
-                    raise RuntimeError(f"Command failed: {c}")
+            if step1_B_make_background == True:
+                #######################################################################
+                # Make background by coarsening to ne16pg3 and prolongin to mpasa3p75
+                ######################################################################
+                tmp2   = f"{WrkDir}/{var}_dyamond_ne16pg3.nc"
+                outfile= f"{WrkDir}/{var}_dyamond_ne16pg3_mpasa3p75.{date_}.nc"
+    
+                cmds = [
+                    # conservative remap mpasa3p75km -> ne16pg3
+                    "ncremap -m /glade/work/juliob/HiRes_ana_dev/Drivers/mpasa3p75_TO_ne16pg3_cnsrv.nc "
+                    f"{tmp1} {tmp2}",
+                
+                    # bilinear remap ne16pg3 -> mpasa3p75km
+                    "ncremap -m /glade/work/juliob/HiRes_ana_dev/Drivers/ne16pg3_TO_mpasa3p75_bilin.nc "
+                    f"{tmp2} {outfile}",
+                    ]
+                
+                for c in cmds:
+                    print("Running:", c, flush=True )
+                    result = subprocess.run(c, shell=True)
+                
+                    if result.returncode != 0:
+                        raise RuntimeError(f"Command failed: {c}")
             
         print("Step 1 All done." , flush=True )
         
@@ -355,7 +358,8 @@ def drive():
         #   Make other dynamical fileds on fv1x1 grid
         ###############################################
     
-        vars =['U','V','T','Q','theta_mpas','rho_mpas','PINT',]
+        #vars = ['U','V','T','Q','theta_mpas','rho_mpas','PINT',]
+        vars = ['PRECC','PRECL',]
         for var in vars:
             infile   = f"{WrkDir}/{var}_dyamond.nc"
             outfile= f"{WrkDir}/{var}_dyamond_fv1x1.{date_}.nc"
@@ -383,7 +387,11 @@ def drive():
         # Step 6
         #   Make some dyn fields on a UHR (lat-lon) regional grid
         ##############################################################
+        #UHRtag="UHR_SAndesAP"
+        #UHRtag="UHR_SO-Indian"
 
+        WrkDirUHR = f"/glade/campaign/cgd/amp/juliob/mpasa3p75km/{case}/{UHRtag}/{date_}"
+        os.makedirs( WrkDirUHR , exist_ok=True )
 
         """
         # extract PHIS
@@ -405,8 +413,6 @@ def drive():
                 raise RuntimeError(f"Command failed: {c}")
         """
 
-        #UHRtag="UHR_SAndesAP"
-        UHRtag="UHR_SO-Indian"
         vars =['PHIS','zgrid',]
         for var in vars:
             infile   = f"{TimeInvDir}/{var}_dyamond.nc"
@@ -424,7 +430,7 @@ def drive():
                 print( f"doing {outfile} " , flush=True ) 
                 cmds = [
                     # conservative remap mpasa3p75km -> UHR
-                    f"ncremap -m /glade/work/juliob/HiRes_ana_dev/Drivers/mpasa3p75_TO_{UHRtag}_bilin_serial.nc "
+                    f"ncremap -m /glade/work/juliob/HiRes_ana_dev/Drivers/mpasa3p75_TO_{UHRtag}_bilin.nc "
                     f"{infile} {outfile}",
                             ]
                 for c in cmds:
@@ -439,11 +445,11 @@ def drive():
         vars =['U','V','T','Q','theta_mpas','w_mpas','rho_mpas',]
         for var in vars:
             infile   = f"{WrkDir}/{var}_dyamond.nc"
-            outfile= f"{WrkDir}/{var}_dyamond_{UHRtag}.{date_}.nc"
+            outfile= f"{WrkDirUHR}/{var}_dyamond_{UHRtag}.{date_}.nc"
             
             cmds = [
                 # conservative remap mpasa3p75km -> UHR
-                f"ncremap -m /glade/work/juliob/HiRes_ana_dev/Drivers/mpasa3p75_TO_{UHRtag}_bilin_serial.nc "
+                f"ncremap -m /glade/work/juliob/HiRes_ana_dev/Drivers/mpasa3p75_TO_{UHRtag}_bilin.nc "
                 f"{infile} {outfile}",
                         ]
             
@@ -457,11 +463,11 @@ def drive():
         vars =['U_prt','V_prt','theta_mpas_prt','w_mpas_prt',]
         for var in vars:
             infile   = f"{WrkDir}/{var}_dyamond.{date_}.nc"
-            outfile= f"{WrkDir}/{var}_dyamond_{UHRtag}.{date_}.nc"
+            outfile= f"{WrkDirUHR}/{var}_dyamond_{UHRtag}.{date_}.nc"
             
             cmds = [
                 # conservative remap mpasa3p75km -> UHR
-                f"ncremap -m /glade/work/juliob/HiRes_ana_dev/Drivers/mpasa3p75_TO_{UHRtag}_bilin_serial.nc "
+                f"ncremap -m /glade/work/juliob/HiRes_ana_dev/Drivers/mpasa3p75_TO_{UHRtag}_bilin.nc "
                 f"{infile} {outfile}",
                         ]
             

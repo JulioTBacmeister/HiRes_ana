@@ -31,7 +31,7 @@ echo "Cruising .... "
 find . -type f -name "HRproc.o*" -mmin +10 -exec rm {} \;
 
 #./regrid_MPAS3_75km.py
-./regrid_HRxLR.py
+#./regrid_HRxLR.py
 ./regrid_genl.py
 ./recur.py         #--config config_mpas_ana.yaml
 

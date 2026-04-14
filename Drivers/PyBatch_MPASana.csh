@@ -28,7 +28,7 @@ echo "Cruising .... "
 
 # remove logs that are more than 10 minutes old.
 #-----------------------------------------------
-find . -type f -name "MPproc.o*" -mmin +10 -exec rm {} \;
+find . -type f -name "MPproc.o*" -mmin +5 -exec rm {} \;
 
 ./regrid_MPAS3p75km.py
 ./recur.py --config config_mpas_ana.yaml --script PyBatch_MPASana.csh

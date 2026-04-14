@@ -42,7 +42,13 @@ module load esmf/8.8.0
 #mpiexec -np 512 -ppn 128 /glade/u/apps/cseg/derecho/23.06/spack/opt/spack/linux-sles15-x86_64_v3/oneapi-2023.0.0/esmf-8.6.0b04-mkg7dasd7hipsqte2ibfflqzfe7cwgos/bin/ESMF_RegridWeightGen -s /glade/campaign/cesm/cesmdata/inputdata/share/scripgrids/mpasa3.75_SCRIP_desc-20210803.nc -d /glade/work/juliob/GridFiles/Scrip/latlon_UHR_SEUS_scrip.nc -m bilinear -w mpasa3p75_TO_UHR_SEUS_bilin_testing.nc --64bit_offset --dst_regional
 
 # Run the executable for one file
-mpiexec -np 512 -ppn 128 /glade/u/apps/cseg/derecho/23.06/spack/opt/spack/linux-sles15-x86_64_v3/oneapi-2023.0.0/esmf-8.6.0b04-mkg7dasd7hipsqte2ibfflqzfe7cwgos/bin/ESMF_RegridWeightGen -s /glade/campaign/cesm/cesmdata/inputdata/share/scripgrids/ne120pg3_scrip_170628.nc -d /glade/work/juliob/GridFiles/Scrip/latlon_UHR_SEUS_scrip.nc -m bilinear -w ne120pg3_TO_UHR_SEUS_bilin_testing.nc --64bit_offset --dst_regional
+#mpiexec -np 512 -ppn 128 /glade/u/apps/cseg/derecho/23.06/spack/opt/spack/linux-sles15-x86_64_v3/oneapi-2023.0.0/esmf-8.6.0b04-mkg7dasd7hipsqte2ibfflqzfe7cwgos/bin/ESMF_RegridWeightGen -s /glade/campaign/cesm/cesmdata/inputdata/share/scripgrids/ne120pg3_scrip_170628.nc -d /glade/work/juliob/GridFiles/Scrip/latlon_UHR_SEUS_scrip.nc -m bilinear -w ne120pg3_TO_UHR_SEUS_bilin_testing.nc --64bit_offset --dst_regional
+
+# Run the executable for one file
+#mpiexec -np 512 -ppn 128 /glade/u/apps/cseg/derecho/23.06/spack/opt/spack/linux-sles15-x86_64_v3/oneapi-2023.0.0/esmf-8.6.0b04-mkg7dasd7hipsqte2ibfflqzfe7cwgos/bin/ESMF_RegridWeightGen -s /glade/campaign/cesm/cesmdata/inputdata/share/scripgrids/ne120pg3_scrip_170628.nc -d /glade/work/juliob/GridFiles/Scrip/latlon_UHR_SO-East_scrip.nc -m bilinear -w ne120pg3_TO_UHR_SO-East_bilin_testing.nc --64bit_offset --dst_regional
+
+# Run the executable for one file
+mpiexec -np 512 -ppn 128 /glade/u/apps/cseg/derecho/23.06/spack/opt/spack/linux-sles15-x86_64_v3/oneapi-2023.0.0/esmf-8.6.0b04-mkg7dasd7hipsqte2ibfflqzfe7cwgos/bin/ESMF_RegridWeightGen  -s /glade/campaign/cesm/cesmdata/inputdata/share/scripgrids/mpasa3.75_SCRIP_desc-20210803.nc -d /glade/work/juliob/GridFiles/Scrip/latlon_UHR_SO-East_scrip.nc -m bilinear -w mpasa3p75_TO_UHR_SO-East_bilin_testing.nc --64bit_offset --dst_regional
 
 # Run the executable for one file
 #mpiexec -np 512 -ppn 128 /glade/u/apps/cseg/derecho/23.06/spack/opt/spack/linux-sles15-x86_64_v3/oneapi-2023.0.0/esmf-8.6.0b04-mkg7dasd7hipsqte2ibfflqzfe7cwgos/bin/ESMF_RegridWeightGen -s /glade/campaign/cesm/cesmdata/inputdata/share/scripgrids/mpasa3.75_SCRIP_desc-20210803.nc -d /glade/work/juliob/GridFiles/Scrip/latlon_UHR_SO-Indian_scrip.nc -m bilinear -w mpasa3p75_TO_UHR_SO-Indian_bilin.nc --64bit_offset --dst_regional
