@@ -325,3 +325,61 @@ def plot_cluster_composites(
 
     #plt.show()
     return fig, axes, composites
+
+def plot_pc_loading(pca, component_idx, feature_info, zlev, z_idx, 
+                    field_idx=0, cmap='RdBu_r'):
+    """
+    Reshape and plot a PCA loading vector back into (y,x) space
+    at a chosen z level and field.
+    
+    Parameters
+    ----------
+    pca : fitted sklearn PCA object
+    component_idx : int
+        Which PC to plot (0=PC1, 1=PC2 etc.)
+    feature_info : dict
+        As returned by assemble_feature_matrix()
+    zlev : np.ndarray
+        Array of z levels
+    z_idx : int
+        Which z level to show
+    field_idx : int
+        Which field to show (0=vorticity, 1=u, 2=v etc.)
+    """
+    n_t, n_z, n_y, n_x = feature_info['field_shape']
+    n_per_field         = feature_info['n_per_field']
+    field_names         = feature_info['field_names']
+    
+    # extract the loading for this PC
+    loading = pca.components_[component_idx]  # (n_features,)
+    
+    # extract the block for the chosen field and reshape
+    field_start  = field_idx * n_per_field
+    field_end    = field_start + n_per_field
+    loading_field = loading[field_start:field_end].reshape(n_t, n_z, n_y, n_x)
+    
+    # plot time sequence at chosen z level
+    fig, axes = plt.subplots(1, n_t, figsize=(3*n_t, 3.5))
+    vmax = np.abs(loading_field[:, z_idx]).max()
+    
+    t_labels = [f't{i-n_t+1}' if i < n_t-1 else 't0' for i in range(n_t)]
+    
+    for ti, ax in enumerate(axes):
+        im = ax.pcolormesh(loading_field[ti, z_idx], 
+                          cmap=cmap, vmin=-vmax, vmax=vmax)
+        ax.set_title(t_labels[ti], fontsize=9)
+        ax.set_xticks([]); ax.set_yticks([])
+        ax.axhline(n_y//2, color='k', lw=0.5, ls='--', alpha=0.4)
+        ax.axvline(n_x//2, color='k', lw=0.5, ls='--', alpha=0.4)
+    
+    # --- shared colorbar ---------------------------------------------------
+    cbar_ax = fig.add_axes([1.02, 0.15, 0.02, 0.7])
+    fig.colorbar(im, cax=cbar_ax, label=f'{field_names[field_idx]}' )
+
+    
+    fig.suptitle(f'PC{component_idx+1} loading — '
+                 f'{field_names[field_idx]} at z={zlev[z_idx]:.0f}km', 
+                 fontsize=11)
+    plt.tight_layout()
+    #plt.show()
+    return loading_field

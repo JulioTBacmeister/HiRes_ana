@@ -23,7 +23,7 @@ module load esmf/8.8.0
 #mpiexec -np 512 -ppn 128 /glade/u/apps/cseg/derecho/23.06/spack/opt/spack/linux-sles15-x86_64_v3/oneapi-2023.0.0/esmf-8.6.0b04-mkg7dasd7hipsqte2ibfflqzfe7cwgos/bin/ESMF_RegridWeightGen -s /glade/work/juliob/GridFiles/Scrip/ne16pg3_scrip_170429.nc -d /glade/work/juliob/GridFiles/Scrip/fv0.9x1.25_141008.nc -m bilinear -w ne16pg3_TO_fv1x1_bilin.nc --64bit_offset
 
 # Run the executable for one file
-#mpiexec -np 512 -ppn 128 /glade/u/apps/cseg/derecho/23.06/spack/opt/spack/linux-sles15-x86_64_v3/oneapi-2023.0.0/esmf-8.6.0b04-mkg7dasd7hipsqte2ibfflqzfe7cwgos/bin/ESMF_RegridWeightGen -s /glade/campaign/cesm/cesmdata/inputdata/share/scripgrids/mpasa3.75_SCRIP_desc-20210803.nc -d #/glade/work/juliob/GridFiles/Scrip/fv0.9x1.25_141008.nc -m conserve -w mpasa3p75_TO_fv1x1_cnsrv.nc --64bit_offset
+#mpiexec -np 512 -ppn 128 /glade/u/apps/cseg/derecho/23.06/spack/opt/spack/linux-sles15-x86_64_v3/oneapi-2023.0.0/esmf-8.6.0b04-mkg7dasd7hipsqte2ibfflqzfe7cwgos/bin/ESMF_RegridWeightGen -s /glade/campaign/cesm/cesmdata/inputdata/share/scripgrids/mpasa3.75_SCRIP_desc-20210803.nc -d /glade/work/juliob/GridFiles/Scrip/fv0.9x1.25_141008.nc -m conserve -w mpasa3p75_TO_fv1x1_cnsrv.nc --64bit_offset
 
 
 # Run the executable for one file

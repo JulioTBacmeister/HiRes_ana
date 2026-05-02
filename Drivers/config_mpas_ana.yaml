@@ -3,11 +3,11 @@ Case: c124_dyamond1_prod2
 Dst: null
 DstVgrid: null
 Output_abs_dir: null
-Resubmit: 122
+Resubmit: -1
 StepBy: hour
 StepN: 3
 UHRtag: UHR_SO-East
-day: 17
+day: 2
 do_steps:
 - false
 - false
@@ -20,7 +20,7 @@ do_steps:
 - false
 - false
 frequency: null
-hour: 15
+hour: 0
 hsPat: h2i
-month: 8
+month: 9
 year: 2016

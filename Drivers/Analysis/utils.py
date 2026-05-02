@@ -138,7 +138,11 @@ def fronto_horz( u, v, th, lon,lat ):
     
     for t in np.arange( nt ):
         for z in np.arange(nz):
-            thx[t,z,:,:] , thy[t,z,:,:]  = nuti.Sphere_Grad2_vec(th[t,z,:,:], lat, lon, wrap=True, keep_pole_clamp=True)
+            if (t==0 and z==0):
+                verbose=True
+            else:
+                verbose=False
+            thx[t,z,:,:] , thy[t,z,:,:]  = nuti.Sphere_Grad2_vec(th[t,z,:,:], lat, lon, wrap=True, keep_pole_clamp=True , verbose=verbose )
             ux[t,z,:,:] ,  uy[t,z,:,:]   = nuti.Sphere_Grad2_vec(u[t,z,:,:], lat, lon, wrap=True, keep_pole_clamp=True)
             vx[t,z,:,:] ,  vy[t,z,:,:]   = nuti.Sphere_Grad2_vec(v[t,z,:,:], lat, lon, wrap=True, keep_pole_clamp=True)
 

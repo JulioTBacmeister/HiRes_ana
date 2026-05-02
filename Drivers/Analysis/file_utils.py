@@ -136,7 +136,14 @@ def case_defaults( case, nsteps, step_size, start_date, dycore, topofile ):
     print( f"  nsteps={nsteps} " )
     return base_x, nsteps, step_size, start_date, dycore, topofile, subdycore
 
-def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore=None, topofile=None ):
+def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore=None, topofile=None, super_lat_range=None ):
+
+    # A lat range to reduce memory use
+    ###################################
+    if super_lat_range is not None:
+        lat_south,lat_north=super_lat_range
+    else:
+        lat_south,lat_north=-90.,90.
 
     #####################################
     # Set up lazy defaults
@@ -144,6 +151,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
     base_x, nsteps, step_size, start_date, dycore, topofile, subdycore = case_defaults( case, nsteps, step_size, start_date, dycore, topofile )
 
     Topo=xr.open_dataset( topofile )
+    Topo=Topo.sel( lat=slice(lat_south, lat_north)) 
     htopo=Topo.PHIS.values/grav
 
     
@@ -166,6 +174,10 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
 
 
     X=xr.open_mfdataset( files_x ,  data_vars='different', coords='different', compat='no_conflicts'   )
+
+    print( f" Dataset opened  , dtype of U,V {X.U.values.dtype} {X.V.values.dtype} " )
+    X = X.sel( lat=slice(lat_south, lat_north)) 
+    print( f" Dataset opened  trimmed. {X.lat.values.min():6.2f} to {X.lat.values.max():6.2f} " )
     
     if (dycore in ['SE','MPAS',]):
         ncdata='none'
@@ -198,7 +210,6 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
     
         u = X.U.values 
         v = X.V.values
-        
         te = X.T.values
         nt,nz,ny,nx = np.shape( u )  # This is the shape for the duration of this SE,MPAS block
         zeta = np.zeros( ( nt,nz,ny,nx) )
@@ -347,12 +358,15 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
          }
 
     # Add some 'after thought' quantities ...
+    # Precip is tiled to ensure 'fair' counting in ML 
     if ('PRECL' in X):
         precl=X.PRECL.values
+        precl = np.tile( precl[:, np.newaxis, :, :],(1,nz,1,1) )
         A_['precl']=precl
     if ('PRECC' in X):
-        precl=X.PRECC.values
-        A_['precc']=precl
+        precc=X.PRECC.values
+        precc = np.tile( precc[:, np.newaxis, :, :],(1,nz,1,1) )
+        A_['precc']=precc
 
     
     A = AttrDict( A_ )

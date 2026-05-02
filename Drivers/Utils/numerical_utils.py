@@ -54,26 +54,32 @@ def JsJn( j , ny ):
         jn=ny-1
     return js,jn
 
-def Sphere_Grad2_vec(f, lat, lon, wrap=True, keep_pole_clamp=True):
+def Sphere_Grad2_vec(f, lat, lon, wrap=True, keep_pole_clamp=True, verbose=False ):
     """
     f:   (ny, nx)
     lat: (ny,)
     lon: (nx,)
     returns: f_x, f_y  (both (ny, nx))
     """
+    if verbose==True:
+        print( f"this is Sphere_grad_vec in numerical_utils in HiRes_ana")
+        print( f"dlat has been adjusted to account for FUCKED UP CRAPPY fv1x1 SCRIP FILE IN CESMDATA INPUTs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ")
     Pi  = co.pi()
     R_e = co.Rearth()
 
     lat = np.asarray(lat)
     lon = np.asarray(lon)
     f   = np.asarray(f)
-
     ny, nx = f.shape
 
     rlat = (Pi/180.0) * lat
     rlon = (Pi/180.0) * lon
 
-    dlat = rlat[2] - rlat[0]
+    ##################################
+    # AAAAAAAAAAAAHhhhhhhhhhhhhhh!!!!!!!!!!
+    ##################################
+    dlat = rlat[3] - rlat[1]
+    
     dlon = rlon[2] - rlon[0]
 
     coslat = np.cos(rlat)[:, None]  # (ny,1) for broadcasting
@@ -121,7 +127,7 @@ def Sphere_Grad2( f, lat, lon, wrap=True ):
     
     rlat = (Pi/180.)*lat
     rlon = (Pi/180.)*lon
-    dlat=rlat[2]-rlat[0]
+    dlat=rlat[3]-rlat[1]
     dlon=rlon[2]-rlon[0]
 
     f_x = np.zeros( (ny,nx) )
@@ -148,7 +154,7 @@ def Sphere_Div2( f_x, f_y, lat, lon, wrap=True ):
     
     rlat = (Pi/180.)*lat
     rlon = (Pi/180.)*lon
-    dlat=rlat[2]-rlat[0]
+    dlat=rlat[3]-rlat[1]
     dlon=rlon[2]-rlon[0]
     coslat = np.cos( rlat )
 
@@ -161,41 +167,11 @@ def Sphere_Div2( f_x, f_y, lat, lon, wrap=True ):
                         ( f_x[j,ie]-f_x[j,iw] ) / dlon
                     +   ( coslat[jn]*f_y[jn,i] - coslat[js]*f_y[js,i] )/dlat )
 
+    divf[-1,:]=0.
+    divf[0,:]=0.
+
     return divf
 
-
-def Sphere_Curl2_slow( f_x, f_y, lat, lon, wrap=True ):
-    ##################################################
-    # Curl of a vector field f=[f_x,f_y] in latlon
-    # coords:
-    #        Zeta ~ d(f_y)/dx - d(f_x)/dy 
-    #
-    #-------------------------------------------------
-    # Inputs need to be 2D (ny,nx) !!
-    ##################################################
-    import numpy as np
-
-    Pi  = co.pi()
-    R_e = co.Rearth()
-
-    nx,ny = len( lon ), len( lat )
-    
-    rlat = (Pi/180.)*lat
-    rlon = (Pi/180.)*lon
-    dlat=rlat[2]-rlat[0]
-    dlon=rlon[2]-rlon[0]
-    coslat = np.cos( rlat )
-
-    curlf_z = np.zeros( (ny, nx ))
-    for j in np.arange( ny ):
-        for i in np.arange( nx ):
-            iw,ie = IwIe(i,nx,wrap=wrap)
-            js,jn = JsJn(j,ny)
-            curlf_z[j,i] = (1./(R_e * coslat[j]))*( 
-                     1.0* ( f_y[j,ie]-f_y[j,iw] ) / dlon
-                    -   ( coslat[jn]*f_x[jn,i] - coslat[js]*f_x[js,i] )/dlat )
-
-    return curlf_z
 
 
 def Sphere_Curl2( f_x, f_y, lat, lon, wrap=True, verbose=False):
@@ -210,7 +186,8 @@ def Sphere_Curl2( f_x, f_y, lat, lon, wrap=True, verbose=False):
     import numpy as np
 
     if verbose==True:
-        print( f"this is numerical_utils in HiRes_ana")
+        print( f"this is Sphere_curl2 in numerical_utils in HiRes_ana")
+        print( f"dlat has been adjusted to account for FUCKED UP CRAPPY fv1x1 SCRIP FILE IN CESMDATA INPUTs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ")
     
     Pi  = co.pi()
     R_e = co.Rearth()
@@ -219,7 +196,14 @@ def Sphere_Curl2( f_x, f_y, lat, lon, wrap=True, verbose=False):
     
     rlat = (Pi/180.)*lat
     rlon = (Pi/180.)*lon
-    dlat=rlat[2]-rlat[0]
+    
+    #########################################################
+    # This is extremely non-ideal, but the fv1x1 scrip file in CESMDATA is
+    # totally FOOBARRED and we are just going to have live with it. Southmost lat 
+    # is weird, and northwrad is weird but at least uniform
+    #########################################################
+    dlat=rlat[3]-rlat[1]
+
     dlon=rlon[2]-rlon[0]
     coslat = np.cos( rlat )
 

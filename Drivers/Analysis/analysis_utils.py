@@ -50,8 +50,14 @@ def find_gw_events(epwp, thresh, connectivity=8):
             epwp_sum : integrated flux in event
     """
 
-    mask = epwp > thresh
-
+    #print( f"Threhold size {np.size(thresh)}" )
+    if np.size(thresh)==1:
+        mask = epwp > thresh
+    elif np.size(thresh)==2:
+        mask = (epwp>thresh[0]) & (epwp<=thresh[1])
+    else:
+        raise ValueError("threshold missing or wrong size")
+    
     if connectivity == 8:
         structure = np.ones((3,3), dtype=int)
     else:
@@ -84,14 +90,109 @@ def find_gw_events(epwp, thresh, connectivity=8):
 
     return events
 
+def find_gw_events_watershed_2(epwp, thresh, use_watershed=True,  use_peak_local_max=True, second_thresh=None, 
+                              lat_range=None, lon_range=None, lat=None, lon=None ):
+
+    if np.size(thresh)==1:
+        mask = epwp > thresh
+    elif np.size(thresh)==2:
+        mask = (epwp > thresh[0]) & (epwp <= thresh[1])
+    else:
+        raise ValueError("threshold missing or wrong size")
+
+
+    if use_peak_local_max:
+        peaks = peak_local_max(
+            epwp,
+            footprint=np.ones((3,3)),
+            labels=mask
+        )
+    else:
+        iy, ix = np.where(mask)
+        peaks = np.column_stack((iy, ix))
+
+    events = []
+
+    if use_watershed:
+        markers = np.zeros_like(epwp, dtype=int)
+
+        for i, (y, x) in enumerate(peaks, start=1):
+            markers[y, x] = i
+
+        labels = watershed(-epwp, markers, mask=mask)
+
+        for i in range(1, labels.max() + 1):
+            region = labels == i
+
+            iy, ix = np.where(region)
+            vals = epwp[iy, ix]
+
+            k = np.argmax(vals)
+
+            events.append({
+                "iy": iy[k],
+                "ix": ix[k],
+                "epwp_max": vals[k],
+                "size": len(vals),
+                "epwp_sum": vals.sum()
+            })
+
+    else:
+        # treat each detected peak as an event directly
+        for (y, x) in peaks:
+            events.append({
+                "iy": y,
+                "ix": x,
+                "epwp_max": epwp[y, x],
+                "size": 1,
+                "epwp_sum": epwp[y, x]
+            })
+
+
+    #####################################
+    # Secondary culling ....
+    #####################################
+    if second_thresh is not None:
+        thr0,thr1=second_thresh
+        events_x=[]
+        for e in events:
+            if e['epwp_max'] >thr0 and e['epwp_max']<=thr1:
+                events_x.append( e )
+        events = events_x
+        
+    if (lat_range is not None) and (lat is not None):
+        latS,latN=lat_range[0],lat_range[1]
+        events_x=[]
+        for e in events:
+            lat0 = lat[int(e["iy"])]
+            if (lat0>=latS) and (lat0<=latN):
+                events_x.append( e )
+        events = events_x
+
+    if (lon_range is not None) and (lon is not None):
+        lonW,lonE=lon_range[0],lon_range[1]
+        events_x=[]
+        for e in events:
+            lon0 = lon[int(e["ix"])]
+            if (lon0>=lonW) and (lon0<=lonE):
+                events_x.append( e )
+        events = events_x
+
+    
+    return events
+
 
 def find_gw_events_watershed(epwp, thresh):
 
-    mask = epwp > thresh
-
-
+    #print( f"Threhold size {np.size(thresh)}" )
+    if np.size(thresh)==1:
+        mask = epwp > thresh
+    elif np.size(thresh)==2:
+        mask = (epwp>thresh[0]) & (epwp<=thresh[1])
+    else:
+        raise ValueError("threshold missing or wrong size")
     #print( f" size of True - epwp>{thresh} = {np.sum(mask)}  " )
-    #print( f" size of epwp = {np.size(epwp)} " )
+    #print( f" size of True mask = {np.sum(mask)} " )
 
     
     # distance field helps watershed separate peaks
@@ -573,7 +674,7 @@ def contrib_to_total(epwp):
 
     
 
-def cumul_big_to_small(epwp):
+def cumul_big_to_small(epwp, plot_it=False):
 
     x = epwp # np.abs(upwp)
     x = x[np.isfinite(x)]
@@ -585,16 +686,17 @@ def cumul_big_to_small(epwp):
     # cumulative sum from the top tail downward
     tail_sum = np.cumsum(xs[::-1])[::-1]
     tail_frac = tail_sum / tail_sum[0]
-    
-    fig, ax = plt.subplots()
-    ax.plot(xs, tail_frac)
-    
-    ax.set_xscale('log')
-    ax.set_xlabel('X')
-    ax.set_ylabel(r'Fraction of total |upwp| from values >= X')
-    ax.set_title(r'Tail contribution of $|upwp|$')
 
+    if plot_it==True:
+        fig, ax = plt.subplots()
+        ax.plot(xs, tail_frac)
+        
+        ax.set_xscale('log')
+        ax.set_xlabel('X')
+        ax.set_ylabel(r'Fraction of total |upwp| from values >= X')
+        ax.set_title(r'Tail contribution of $|upwp|$')
 
+    return tail_frac,xs
 
 def event_composite_correlation(A_4D, composite=None, CorrKey='tzyx'):
     """
