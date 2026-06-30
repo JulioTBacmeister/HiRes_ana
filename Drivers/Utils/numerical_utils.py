@@ -211,6 +211,10 @@ def Sphere_Curl2( f_x, f_y, lat, lon, wrap=True, verbose=False):
 
     coslat_jn = np.roll(coslat, -1)
     coslat_js = np.roll(coslat, 1)
+
+    coslat_jn[-1] = coslat[-1]  # repeat last row
+    coslat_js[0] = coslat[0]  # repeat last row
+
     
     # Compute the curl component using vectorized operations
     curlf_z = (1.0 / (R_e * coslat[:, np.newaxis])) * (
@@ -237,9 +241,12 @@ def Sphere_Curl2( f_x, f_y, lat, lon, wrap=True, verbose=False):
     # If you have different boundary conditions, you may need to handle them separately.
     #curlf_z[0,:]=0.
     #curlf_z[ny-1,:]=0.
-    curlf_z[0:1 ,:]=0.
-    curlf_z[ny-2:ny-1,:]=0.
-    
+    #curlf_z[0:1 ,:]=0.
+    #curlf_z[ny-2:ny-1,:]=0.
+
+    curlf_z[0,:]=curlf_z[1,:]
+    curlf_z[-1,:]=curlf_z[-2,:]
+
     return curlf_z
 
 

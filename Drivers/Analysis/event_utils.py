@@ -69,8 +69,11 @@ class AttrDict(dict):
 def make_El(A=None, 
             fractions_for_thresholds=None, 
             zlev_event=None, 
-            lat_range=None,lon_range=None,exclude_orography=True ):
+            lat_range=None,lon_range=None,exclude_orography=True,
+            peak_footprint=(3,3),
+            return_after_stage1=False):
 
+    event_fld = 'rho_epwp'
     if fractions_for_thresholds is not None:
         fracs = fractions_for_thresholds
     else:
@@ -82,13 +85,34 @@ def make_El(A=None,
     topo_thresh=1.e-12 # needs to be this low to remove Malvinas/Falklands(?)  ... 0.0001 leaves them. 
 
     ###############################################
+    # Stage 1.
     # Scope out range and distribution of events
     ###############################################
+    z_event  = np.argmin( np.abs( zlev - zlev_event ) )
+    x=A.rho_epwp[:,z_event,:,:].flatten()
+    cumu,xs=auti.cumul_big_to_small( x, plot_it=True )
+    
+    thresh_fracs=[]
+    thresholds=[]
+    N_events=[]
+    Total_events=len(xs)
+    print( f"looking at Z={zlev[ z_event ]}" )
+    print( f"There are a total of {Total_events} gridpoints in {lon_range}X{lat_range} " )
+    for b in fracs:
+        xoo=np.argmin( np.abs(cumu-b) )
+        print(f" fraction={100*b:5.2f}% of total epwp is in events with epwp > {xs[xoo]:.5f}. Carried by N={len(xs[xoo:]):6d} events or {100*len(xs[xoo:])/len(xs):5.2f}%  ")
+        thresh_fracs.append(xs[xoo])
+        thresholds.append( np.array([ xs[xoo],1.e6] ) )
+        N_events.append( len(xs[xoo:]) )
+
+    print(f" Threshholds {thresholds}")
+    
     thresh=[0.,1e6]
     second_thresh=None #second_thresholds[ithr]
     ds =  make_ds(fld=A.rho_epwp[:,:,:,:], lon=lon, lat=lat, zlev=zlev, time=time, 
                      thresh=thresh,second_thresh=second_thresh,zlev_event=zlev_event, 
-                     lat_range=lat_range, lon_range=lon_range)
+                     lat_range=lat_range, lon_range=lon_range,
+                     peak_footprint=peak_footprint )
     
     # get shape of varaiables
     nt,nz,ny,nx = np.shape( A.u )
@@ -130,11 +154,12 @@ def make_El(A=None,
     print(f" Threshholds {thresholds}")
 
 
+    if return_after_stage1==True:
+        return ds
+    
     ############################################################################
     #   STAGE 2. Actually construct El objects using statistics from stage 1
     ############################################################################
-
-    
     
     El=[]
     
@@ -156,7 +181,8 @@ def make_El(A=None,
         second_thresh=None #second_thresholds[ithr]
         ds =   make_ds(fld=A.rho_epwp[:,:,:,:], lon=lon, lat=lat, zlev=zlev, time=time, 
                          thresh=thresh,second_thresh=second_thresh,zlev_event=zlev_event, 
-                         lat_range=lat_range, lon_range=lon_range)
+                         lat_range=lat_range, lon_range=lon_range,
+                         peak_footprint=peak_footprint )
         
     
         # get shape of varaiables
@@ -178,9 +204,14 @@ def make_El(A=None,
             ds_flat=ds.isel( index=flat[0] )    
             ds=ds_flat
             print( f"N events: = {ds.sizes['index']} AFTER topo filtering !!!! " )
-       
+
+                    
         E_ = {'ds':ds }
+        E_['fld'] = event_fld
         E_['case'] = A.case
+        E_['dycore'] = A.dycore
+        E_['start_date'] = A.start_date
+        E_['end_date'] = A.end_date
         E_['threshold']=thresh
         E_['zlev_event']=zlev_event
         if second_thresh is not None:
@@ -191,7 +222,12 @@ def make_El(A=None,
         E_['N_events'] = ds.sizes['index']
         E_['Total_events'] = Total_events # after Topo filtering but BEFOR any thresholds applied
         E_['Frac_of_total_epwp'] = fracs[ithr]
-    
+
+        # Wrap in coordinate vectors
+        # time, zlev, lat, lon = A.time, A.zlev, A.lat, A.lon
+        E_['timeA'], E_['zlevA'], E_['latA'], E_['lonA'] = time,zlev,lat,lon
+
+        
         window=lil_window # [3,2,2]
         #window=[6,2,2] # MPAS results are 3-hourly ...
         if ds.sizes['index'] < 75_000:
@@ -200,8 +236,9 @@ def make_El(A=None,
         #window=[6,5,5] # MPAS results are 3-hourly ...
         
         
+        E_['window_tyx']=window
+        E_['peak_footprint']=peak_footprint
         
-        precl_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=A.precl , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
         htopo_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=htopo_t , lon=lon, lat=lat, window=window , TZHkey='tyx', lat_range=lat_range, lon_range=lon_range )
         zeta_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.zeta , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
         tilt_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.tilt , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
@@ -212,12 +249,21 @@ def make_El(A=None,
         u_4D, time4D,lat4D,lon4D    = auti.cube4D_ds( event_ds=ds, aa=A.u , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
         v_4D, time4D,lat4D,lon4D    = auti.cube4D_ds( event_ds=ds, aa=A.v , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
         th_4D, time4D,lat4D,lon4D   = auti.cube4D_ds( event_ds=ds, aa=A.th , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+        stab_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.stab , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
     
         E_['time4D'], E_['lat4D'], E_['lon4D'] = time4D,lat4D,lon4D
         E_['u_4D'], E_['v_4D'], E_['htopo_4D'] = u_4D,v_4D,htopo_4D
         E_['zeta_4D'], E_['tilt_4D'] , E_['fgf_4D']  = zeta_4D,tilt_4D,fgf_4D
         E_['upwp_4D'], E_['vpwp_4D'] , E_['epwp_4D']  = upwp_4D,vpwp_4D,epwp_4D
-        E_['precl_4D'], E_['th_4D'] = precl_4D,th_4D
+        E_['th_4D'] = th_4D
+        E_['stab_4D'] = stab_4D
+        
+        if 'precl' in A:
+            precl_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=A.precl , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+            E_['precl_4D'] = precl_4D
+        if 'rho_thpwp' in A:
+            thpwp_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=A.rho_thpwp , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+            E_['thpwp_4D'] = thpwp_4D
     
         E = AttrDict( E_ )
         El.append(E)
@@ -227,43 +273,10 @@ def make_El(A=None,
     return El
 
 
-##########################################################################
-def write_ds(ds=None, A=None,fld='epwp',extra_info=None,
-            fraction_of_total=None, thresh=None, zlev_event=None, zlev=None,
-            lat_range=None,lon_range=None ):
-
-    hemi=[]
-    for lat in lat_range:
-        if lat <0:
-            hemi.append('S')
-        elif lat>0:
-            hemi.append('N')
-        elif lat==0:
-            hemi.append('')
-    
-    if extra_info==None:
-        extra_tag='' 
-    else:
-        extra_tag=str(extra_info)
-    
-    latXlon_ = f"{np.abs(lat_range[0]):02d}{hemi[0]}-{np.abs(lat_range[1]):02d}{hemi[1]}"
-    outfile=f"{A.case}_f{fraction_of_total:.1%}{fld}Events_Z{0.001*zlev_event:.0f}km_{A.start_date}-{A.end_date}_{latXlon_}{extra_tag}.nc"
-    print( f"writing {outfile}" )
-
-    
-    ds.attrs["description"] = "GW events from resolved momentum flux"
-    ds.attrs["epwp_definition"] = "sqrt(upwp^2 + vpwp^2)"
-    ds.attrs["threshold"] = thresh
-    ds.attrs["vertical_level"] = zlev_event
-    ds.attrs["source_files"] = f"{A.base_file_name}.%y-%m-%d-%s.nc"
-    ds.attrs["start_date"] = f"{A.start_date}"
-    ds.attrs["step_size_in_hours"] = f"{A.step_size}"
-    ds.to_netcdf( outfile )
-
 ###############################################################################
 def make_ds(fld=None, lat=None, lon=None, zlev=None, time=None, 
             thresh=None, second_thresh=None, zlev_event=None, 
-            lat_range=None,lon_range=None,
+            lat_range=None,lon_range=None, peak_footprint=(3,3),
             write_ncfile=False, return_list=False, A=None ):
 
 
@@ -272,18 +285,20 @@ def make_ds(fld=None, lat=None, lon=None, zlev=None, time=None,
     
     z_event  = np.argmin( np.abs( zlev - zlev_event ) )
     print( f"Events at Z={zlev[ z_event ]}" )
+    print( f"Peak footprint={peak_footprint[0]}X{peak_footprint[1]}" )
     
     event_list=[]
     total_events = 0
     for t in np.arange( nt ):
         #events  = auti.find_gw_events(epwp= rho_epwp[t,z,:,:] , thresh=0.01, connectivity=8)
         events = auti.find_gw_events_watershed_2(epwp= fld[t, z_event, :, :], thresh=thresh, second_thresh=second_thresh, 
-                                                lat_range=lat_range, lon_range=lon_range, lon=lon, lat=lat) 
+                                                lat_range=lat_range, lon_range=lon_range, lon=lon, lat=lat, 
+                                                peak_footprint=  peak_footprint )
         event_list.append( events )
         #print( f"Length of event list in time loop {len(events)}" )
         total_events = total_events + len(events)
     
-    print( f"Total events {total_events} in {lon_range}X{lat_range} for thresh={thresh} BEFORE topo filtering" )
+    print( f"Total events {total_events} in {lon_range}X{lat_range} for thresh={thresh} BEFORE topo filtering. Peak footprint={peak_footprint[0]}X{peak_footprint[1]}" )
     if return_list == True:
         return event_list
 
@@ -322,7 +337,8 @@ def make_ds(fld=None, lat=None, lon=None, zlev=None, time=None,
        
     
     return ds
-
+    
+######################################################################################
 def revise_ds(ds=None,fld=None,thresh=None ):
 
     if thresh is not None:
@@ -512,13 +528,20 @@ def avg_over_v(El,verbose=False):
 
 
 
+def spec_4D_cube_ranges( El=None, trange=None, yrange=None, xrange=None ):
+
+    time,lat,lon=El.timeA,El.latA,El.lonA
+    window_tyx=El.window_tyx
+
 
 
 ###############################################################################
 #    Tracking 
 ###############################################################################
 
-
+###############################################################################
+#    Tracking 
+###############################################################################
 
 def haversine_distance(lat1, lon1, lat2, lon2):
     """

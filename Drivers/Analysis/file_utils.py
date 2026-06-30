@@ -20,6 +20,7 @@ from Utils import MyConstants as Co
 import utils as U
 import analysis_utils as auti
 
+import time as timelog
 
 Rdair = Co.Rdair()
 grav  = Co.grav()
@@ -66,9 +67,9 @@ def case_defaults( case, nsteps, step_size, start_date, dycore, topofile ):
         case_x = 'c153_topfix_ne240pg3_FMTHIST_xic_x02'
         base_x = f'/glade/derecho/scratch/juliob/archive/{case_x}/atm/fv1x1/{case_x}.cam.h1i'
         if nsteps is None:
-            nsteps = 4*31
+            nsteps = 2*4*31
         if start_date is None:
-            start_date = [2004,8,1,0]
+            start_date = [2004,7,15,0]
         if step_size is None:
             step_size = 6
         if dycore is None:
@@ -77,9 +78,9 @@ def case_defaults( case, nsteps, step_size, start_date, dycore, topofile ):
         case_x = 'c153_topfix_ne240pg3_FMTHIST_xic_x03'
         base_x = f'/glade/derecho/scratch/juliob/archive/{case_x}/atm/fv1x1/{case_x}.cam.h1i'
         if nsteps is None:
-            nsteps = 4*31
+            nsteps = 2*4*31
         if start_date is None:
-            start_date = [2007,8,1,0]
+            start_date = [2007,7,15,0]
         if step_size is None:
             step_size = 6
         if dycore is None:
@@ -88,9 +89,9 @@ def case_defaults( case, nsteps, step_size, start_date, dycore, topofile ):
         case_x = 'c153_topfix_ne240pg3_FMTHIST_xic_x04'
         base_x = f'/glade/derecho/scratch/juliob/archive/{case_x}/atm/fv1x1/{case_x}.cam.h1i'
         if nsteps is None:
-            nsteps = 4*31
+            nsteps = 2*4*31
         if start_date is None:
-            start_date = [2011,8,1,0]
+            start_date = [2011,7,15,0]
         if step_size is None:
             step_size = 6
         if dycore is None:
@@ -138,6 +139,8 @@ def case_defaults( case, nsteps, step_size, start_date, dycore, topofile ):
 
 def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore=None, topofile=None, super_lat_range=None ):
 
+    tic_overall = timelog.perf_counter()
+
     # A lat range to reduce memory use
     ###################################
     if super_lat_range is not None:
@@ -153,7 +156,8 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
     Topo=xr.open_dataset( topofile )
     Topo=Topo.sel( lat=slice(lat_south, lat_north)) 
     htopo=Topo.PHIS.values/grav
-
+    angll=Topo.ANGLL.values[0,:,:]
+    mxdis=Topo.MXDIS.values[0,:,:]
     
     year,month,day,hour= start_date
     start_date_a = f"{year:04d}-{month:02d}-{day:02d}-{hour*3_600:05d}"
@@ -172,13 +176,17 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
     print( files_x[0],files_x[-1])
     # return
 
-
+    tic_begin = timelog.perf_counter()
     X=xr.open_mfdataset( files_x ,  data_vars='different', coords='different', compat='no_conflicts'   )
 
     print( f" Dataset opened  , dtype of U,V {X.U.values.dtype} {X.V.values.dtype} " )
     X = X.sel( lat=slice(lat_south, lat_north)) 
     print( f" Dataset opened  trimmed. {X.lat.values.min():6.2f} to {X.lat.values.max():6.2f} " )
-    
+
+    tic_end = timelog.perf_counter()
+    pTime = f"Read subsetted X w open_mfdata_set  {tic_end - tic_begin:0.4f} seconds"
+    print(pTime)
+
     if (dycore in ['SE','MPAS',]):
         ncdata='none'
         lat=X.lat.values
@@ -197,6 +205,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
         # good to interpolate to a fixed pressure or height 
         # and then scale by rho = P_2500 / (R_dair * T_2500)
         
+        tic_begin = timelog.perf_counter()
         if ('upwp' in X):
             upwp = X.upwp.values 
         elif ('Upwp' in X):
@@ -207,16 +216,28 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
         elif ('Vpwp' in X):
             vpwp = X.Vpwp.values 
             
+        if ('theta_mpaspwp' in X):
+            thpwp = X.theta_mpaspwp.values 
     
         u = X.U.values 
         v = X.V.values
         te = X.T.values
+
+        tic_end = timelog.perf_counter()
+        pTime = f"extracted upwp,...U,V,T etc  {tic_end - tic_begin:0.4f} seconds"
+        print(pTime)
+        
+        tic_begin = timelog.perf_counter()
         nt,nz,ny,nx = np.shape( u )  # This is the shape for the duration of this SE,MPAS block
         zeta = np.zeros( ( nt,nz,ny,nx) )
         for t in np.arange( nt ):
             for z in np.arange( nz ):
                 zeta[t,z,:,:] = nuti.Sphere_Curl2( f_x=u[t,z,:,:]  , f_y=v[t,z,:,:] , lat=lat, lon=lon , wrap=True, verbose=False)
+        tic_end = timelog.perf_counter()
+        pTime = f"Vorticity calc  {tic_end - tic_begin:0.4f} seconds"
+        print(pTime)
     
+        tic_begin = timelog.perf_counter()
         if dycore == 'SE':
             plev, pilev =X.lev.values,X.ilev.values
             zlev, zilev = -7_000. * np.log( plev / 1_000. ) , -7_000. * np.log( pilev / 1_000. )
@@ -225,7 +246,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
             RhoProxy = X.RhoProxy.values
         elif dycore == 'MPAS':
             zlev, zilev = X.lev.values , X.ilev.values
-            plev, pilev = 100_000. * np.exp( zlev / 7_000. ) , 100_000. * np.exp( zilev / 7_000. ) 
+            plev, pilev = 100_000. * np.exp( -zlev / 7_000. ) , 100_000. * np.exp( -zilev / 7_000. ) 
             ze = X.zgrid.values
             pint = X.PINT.values
             #nt,nz,ny,nx = np.shape( pint )
@@ -238,7 +259,15 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
             upwp = tmp    
             tmp = 0.5*( vpwp[:,1:,:,:] + vpwp[:,0:-1,:,:] )
             vpwp = tmp    
+            if ('theta_mpaspwp' in X):
+                tmp = 0.5*( thpwp[:,1:,:,:] + thpwp[:,0:-1,:,:] )
+                thpwp = tmp    
+
+        tic_end = timelog.perf_counter()
+        pTime = f"rho geopht pint ... calc  {tic_end - tic_begin:0.4f} seconds"
+        print(pTime)
     
+        tic_begin = timelog.perf_counter()
         epwp = np.sqrt( upwp**2 + vpwp**2 )
     
         rho, rhoi =  make_rho( te, pint )
@@ -251,6 +280,14 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
             rho_epwp = rho * epwp
             rho_upwp = rho * upwp
             rho_vpwp = rho * vpwp
+            if ('theta_mpaspwp' in X):
+                rho_thpwp = rho * thpwp
+            else:
+                rho_thpwp=-9999.
+            
+        tic_end = timelog.perf_counter()
+        pTime = f"rho calc ... epwp  {tic_end - tic_begin:0.4f} seconds"
+        print(pTime)
 
     elif (dycore == 'UnitTest'):
         ncdata = X.ncdata
@@ -306,14 +343,31 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
     print(v.shape)
     print(zeta.shape)
     print(zo.shape)
+
+    ### TILT
+    tic_begin = timelog.perf_counter()
     tilt=auti.tiltmag(u, v, zeta, zo)
+    tic_end = timelog.perf_counter()
+    pTime = f"tilting calc  {tic_end - tic_begin:0.4f} seconds"
+    print(pTime)
 
 
+    ### FRONTOGENESIS (AND THETA)
+    tic_begin = timelog.perf_counter()
     th=te * (100_000./pmid) ** (2./7.)
     fgf,thx,thy,ux,uy,vx,vy = U.fronto_horz( u, v, th, lon,lat )
-    
     #we wont be using these here
     del thx,thy,ux,uy,vx,vy
+    tic_end = timelog.perf_counter()
+    pTime = f"frontogenesis calc  {tic_end - tic_begin:0.4f} seconds"
+    print(pTime)
+
+    ### STABILITY
+    tic_begin = timelog.perf_counter()
+    stab=auti.stability(th, zo)
+    tic_end = timelog.perf_counter()
+    pTime = f"stability calc  {tic_end - tic_begin:0.4f} seconds"
+    print(pTime)
 
 
     
@@ -336,7 +390,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
             'RhoProxy': RhoProxy ,
             'pint': pint ,
             'pmid': pmid ,
-            'htopo': htopo ,
+            'htopo': htopo , 'angll':angll, 'mxdis':mxdis,
             'rho': rho ,
             'rhoi': rhoi ,
             'zo': zo ,                   
@@ -347,6 +401,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
             'th': th ,
             'zeta': zeta ,
             'tilt': tilt ,
+            'stab': stab ,
             'fgf': fgf,
             'epwp': epwp ,                   
             'upwp': upwp ,                   
@@ -354,7 +409,8 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
             'rho_epwp': rho_epwp ,                   
             'rho_upwp': rho_upwp ,                   
             'rho_vpwp': rho_vpwp ,
-            'X': X,
+            'rho_thpwp': rho_thpwp ,
+            #'X': X,
          }
 
     # Add some 'after thought' quantities ...

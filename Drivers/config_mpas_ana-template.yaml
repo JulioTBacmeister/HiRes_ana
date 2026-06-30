@@ -1,0 +1,40 @@
+Archive_base: null
+Case: c124_dyamond1_L666max-pwmin-notke
+Dst: null
+DstVgrid: null
+Output_abs_dir: null
+Resubmit: 34
+StepBy: hour
+StepN: 3
+UHRtag: null
+#frequency: null
+###############################################
+# Step 1:
+#   Extract var and make background
+# Step 2:
+#   Make perturbations
+# Step 3:
+#    Calculate flux quadratics wp*(U,T, ... ) on mpasa3p75km
+# Step 4:
+#   Coarse grain flux quadratics to ne16 and then project to fv1x1
+# Step 5:
+#   Make other fileds on fv1x1 grid
+# Step 6:
+#   Make some dyn fields on a UHR (lat-lon) regional grid
+# Step 7:
+#    Calculate 2nd set quadratics Tp2, wp2 on mpasa3p75km
+# Step 8:
+#   Coarse grain 2nd set quadratics to ne16 and then project to fv1x1
+# Step 9:
+#   Combine all fv1x1 files
+# Step 10:
+#   Regrid time-invariant grid files like zgrid to fv1x1
+#############################################################
+#            1        2       3       4       5       6       7       8       9       10
+#do_steps =[ True ,  True  , True ,  True  , True  ,  False , True  , True  , True  , False , ]  # Basic processing
+do_steps: [ True ,  True  , True ,  True  , True  ,  False , True  , True  , True  , False , ]
+hsPat: h1i
+year: 2016
+month: 8
+day: 1
+hour: 3

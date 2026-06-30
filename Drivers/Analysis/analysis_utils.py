@@ -8,6 +8,10 @@ from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
 
 import matplotlib.pyplot as plt
+import event_utils as euti
+
+from Utils import MyConstants as Co
+grav=Co.grav()
 
 # This allows for both dict.key and dict['key'] syntax
 class AttrDict(dict):
@@ -91,7 +95,7 @@ def find_gw_events(epwp, thresh, connectivity=8):
     return events
 
 def find_gw_events_watershed_2(epwp, thresh, use_watershed=True,  use_peak_local_max=True, second_thresh=None, 
-                              lat_range=None, lon_range=None, lat=None, lon=None ):
+                              lat_range=None, lon_range=None, lat=None, lon=None, peak_footprint=(3,3) ):
 
     if np.size(thresh)==1:
         mask = epwp > thresh
@@ -100,11 +104,13 @@ def find_gw_events_watershed_2(epwp, thresh, use_watershed=True,  use_peak_local
     else:
         raise ValueError("threshold missing or wrong size")
 
+    # footprint=np.ones((3,3)),
 
+    #print( f"using peak_footprint {peak_footprint}")
     if use_peak_local_max:
         peaks = peak_local_max(
             epwp,
-            footprint=np.ones((3,3)),
+            footprint=np.ones( peak_footprint ),
             labels=mask
         )
     else:
@@ -519,7 +525,22 @@ def tiltmag(u, v, zeta, zm):
     dv_dz = ddz_var(v, zm)
 
     tilt = np.sqrt( (zeta * du_dz)**2 + (zeta * dv_dz)**2 )
+    del du_dz,dv_dz
     return tilt
+
+def stability(th, zm):
+    """
+    Compute
+
+        tilt = || zeta * du/dz, zeta * dv/dz ||
+
+    for arrays shaped (nt,nz,ny,nx).
+    """
+    dth_dz = ddz_var(th, zm)
+
+    stab = grav * dth_dz / th 
+    del dth_dz
+    return stab
 
 def one_dim_pdf(x , nbin=50, log=False, density=True ):
 
@@ -808,3 +829,224 @@ def event_composite_correlation(A_4D, composite=None, CorrKey='tzyx'):
 
     summary = AttrDict( summary_ )
     return r, p, summary
+
+
+#################################################################################################
+# vertical smoother
+def smooth_z(f, z, wz, weight='dz'):
+    """
+    Smooth f(z) over a height window +/- wz, accounting for irregular
+    vertical spacing in z.
+
+    Parameters
+    ----------
+    f : np.ndarray, shape (n_z,)
+    z : np.ndarray, shape (n_z,) — height in metres. Monotonic, but the
+        direction doesn't matter (works for CAM top-down ordering,
+        index 0 = top, index nz = surface, where z decreases with index).
+    wz : float — half-width of the window in metres. At level i, averages
+        over all j with |z[j]-z[i]| <= wz.
+    weight : {'dz', 'none'}
+        'dz'   : weight each level by its local z-spacing, so the result
+                 approximates a height-weighted average rather than a
+                 point-count average.
+        'none' : simple unweighted mean of points in the window.
+
+    Returns
+    -------
+    f_smooth : np.ndarray, shape (n_z,)
+    """
+    z = np.asarray(z, dtype=float)
+    f = np.asarray(f, dtype=float)
+    n = len(z)
+
+    mask = np.abs(z[:, None] - z[None, :]) <= wz   # (n, n), row i = window around z[i]
+
+    if weight == 'dz':
+        dz = np.empty(n)
+        dz[1:-1] = np.abs(z[2:] - z[:-2]) / 2
+        dz[0]    = np.abs(z[1] - z[0])
+        dz[-1]   = np.abs(z[-1] - z[-2])
+        w = mask * dz[None, :]
+    elif weight == 'none':
+        w = mask.astype(float)
+    else:
+        raise ValueError("weight must be 'dz' or 'none'")
+
+    return (w * f[None, :]).sum(axis=1) / w.sum(axis=1)
+
+
+###############################################################################
+# Big descriptive tile for plots
+def big_title(Epl):
+    safe_case = Epl.case.replace('_', r'\_')
+    bold_case = rf"$\mathbf{{{safe_case}}}$"
+
+    if type(Epl.threshold) is str:
+        big_title = \
+        f"N={Epl.N_events} of {Epl.Total_events} in {Epl.lon_range}X{Epl.lat_range}, \
+        \n exclude orography={Epl.exclude_orography}, footprint={Epl.peak_footprint}, \
+        \n epwp_thresh={Epl.threshold} at {Epl.zlev_event} km, \
+        \n fraction of total epwp {Epl.Frac_of_total_epwp} ,\
+        \n case = {bold_case} " 
+    
+    else:
+        big_title = \
+        f"N={Epl.N_events} of {Epl.Total_events} in {Epl.lon_range}X{Epl.lat_range}, \
+        \n exclude orography={Epl.exclude_orography}, footprint={Epl.peak_footprint[0]}x{Epl.peak_footprint[1]}, \
+        \n epwp_thresh={Epl.threshold[0]:.4g} to {Epl.threshold[1]:.2g} at {Epl.zlev_event/1000.:.2f} km, \
+        \n fraction of total epwp {100*Epl.Frac_of_total_epwp:.2f}% ,\
+        \n case = {bold_case} " 
+    
+    return big_title
+    
+###############################################################################
+def plot_xavg_compos( El=None, fld=None ):
+
+    if fld=="zeta_4D":
+        fldlv=1.5e-5*np.linspace(-6,6,num=13)
+        cmap='bwr'
+    elif fld=='tilt_4D':
+        fldlv=1.00e-7*np.linspace(0,6,num=31)
+        cmap='coolwarm' #'inferno'
+    elif fld=='fgf_4D':
+        fldlv=1.5e-15*np.linspace(-6,6,num=31)
+        cmap='bwr'
+    elif fld=='thpwp_4D':
+        fldlv=1.0*np.linspace(-0.05,0.05,num=31)
+        cmap='bwr'
+    else: 
+        fldlv=31
+        cmap='bwr'
+
+    ulv=np.linspace(-60,60,num=27)
+    thlv=np.concatenate( (270.+np.arange(11)*10 , 380.+ np.arange(11)*20) )   #np.linspace(270,600,num=27)
+    mflv=[0.001,0.002,.005, .01, .02]
+    Epls=El #[El[0], El[1], El[2], El[3] ] #, Eco_0 ]
+    print(thlv)
+    nxplo,nyplo=len( Epls ),1
+    fig,axs=plt.subplots( nyplo,nxplo , figsize=(nxplo*7+1,nyplo*8) )
+    axs=axs.flatten()
+    p=0
+    
+    for Epl in Epls:
+        nv,nt_v,nz_v,ny_v,nx_v = np.shape( Epl.zeta_4D )
+        zlev=Epl.zlevA
+        delta_time=3
+    
+        ax=axs[p]
+        Epl_vv=euti.avg_over_v(Epl)
+        zeta_vxv=Epl_vv.zeta_4D.mean(axis=3)
+        u_vxv=Epl_vv.u_4D.mean(axis=3)
+        th_vxv=Epl_vv.th_4D.mean(axis=3)
+        epwp_vxv=Epl_vv.epwp_4D.mean(axis=3)
+        fld_vxv=Epl_vv[fld].mean(axis=3)
+        colo = ax.contourf( np.arange(ny_v), zlev, fld_vxv[nt_v-1,:,:], cmap=cmap , levels=fldlv)
+        lin1 = ax.contour( np.arange(ny_v), zlev, u_vxv[nt_v-1,:,:] , levels=ulv)
+        ax.clabel(lin1, inline=True, fontsize=8, fmt='%1.0f')
+        lin2 = ax.contour( np.arange(ny_v), zlev, th_vxv[nt_v-1,:,:] , levels=thlv, colors='red')
+        ax.clabel(lin2, inline=True, fontsize=8, fmt='%1.0f')
+        lin3 = ax.contour( np.arange(ny_v), zlev, epwp_vxv[nt_v-1,:,:] , levels=mflv, colors='black')
+        ax.clabel(lin3, inline=True, fontsize=8, fmt='%1.3f')
+        ax.set_ylim(0,20_000)
+        ax.set_title( big_title(Epl) )
+        p=p+1
+    
+    cax = fig.add_axes([0.15, 0.02, 0.70, 0.03])
+    cbar = fig.colorbar(colo, cax=cax, orientation='horizontal')
+    cbar.set_label(f"{fld}  s{r'$^{-1}$' }")
+
+############################################################
+# gw_05_steering_level.py
+# ========================
+# Profile-Based Steering Level Estimation for GW Source Analysis
+# Part of the GW Source Analysis project (DYAMOND / 14km runs)
+############################################################
+
+def _trapz(y, x):
+    """
+    Local trapezoidal integration. Used instead of np.trapz/np.trapezoid
+    to avoid depending on which name is available in a given numpy version.
+    """
+    return np.sum(0.5 * (y[1:] + y[:-1]) * np.diff(x))
+
+
+def compute_weighted_centroid(w, z, z_min=None, z_max=None):
+    """
+    Compute the height centroid of a positive-definite weight profile.
+
+        z_centroid = integral(z * w, dz) / integral(w, dz)
+
+    Physical motivation: the vertical analogue of using a vorticity-weighted
+    horizontal centroid to define a storm's position. A profile concentrated
+    near some level z0 is taken as a proxy for a balanced circulation
+    centred near z0, so the steering wind should be sampled there rather
+    than at an assumed fixed level.
+
+    Parameters
+    ----------
+    w : np.ndarray, shape (..., n_z)
+        Positive-definite weight profile(s), e.g. tilt, |zeta|, zeta**2.
+        Leading dimensions are arbitrary batch dims (events, times, ...).
+    z : np.ndarray, shape (n_z,) or same shape as w
+        Height levels, irregular spacing allowed.
+        If 1D, the same grid is used for every profile in w.
+        If it matches w's shape, each profile may carry its own grid
+        (e.g. z(t) for time-varying geopotential height).
+    z_min : float or None
+        If given, integration starts at this height; weight below z_min
+        is excluded (e.g. to drop high surface-layer shear).
+    z_max : float or None
+        If given, integration ends at this height; weight above z_max
+        is excluded (e.g. to drop upper-tropospheric/lower-stratospheric
+        noise). Both cutoffs are obtained by linear interpolation, so
+        neither needs to fall on a grid point.
+
+    Returns
+    -------
+    z_centroid : np.ndarray, shape w.shape[:-1]
+        Height centroid of each profile. NaN where the weight integral
+        between z_min and z_max is zero (a cutoff excludes the whole
+        profile, or the profile is all-zero).
+    """
+    w = np.asarray(w, dtype=float)
+    z = np.asarray(z, dtype=float)
+
+    if z.shape != w.shape:
+        z = np.array(np.broadcast_to(z, w.shape))
+
+    batch_shape = w.shape[:-1]
+    n_batch     = int(np.prod(batch_shape)) if batch_shape else 1
+
+    w_flat = w.reshape(n_batch, -1)
+    z_flat = z.reshape(n_batch, -1)
+    z_centroid = np.full(n_batch, np.nan)
+
+    for i in range(n_batch):
+        zi, wi = z_flat[i], w_flat[i]
+        order  = np.argsort(zi)
+        zi, wi = zi[order], wi[order]
+
+        if z_min is not None and z_min > zi[0]:
+            if z_min >= zi[-1]:
+                continue  # cutoff at or above profile top -> no signal
+            w_cut = np.interp(z_min, zi, wi)
+            keep  = zi > z_min
+            zi    = np.concatenate(([z_min], zi[keep]))
+            wi    = np.concatenate(([w_cut], wi[keep]))
+
+        if z_max is not None and z_max < zi[-1]:
+            if z_max <= zi[0]:
+                continue  # cutoff at or below profile bottom -> no signal
+            w_cut = np.interp(z_max, zi, wi)
+            keep  = zi < z_max
+            zi    = np.concatenate((zi[keep], [z_max]))
+            wi    = np.concatenate((wi[keep], [w_cut]))
+
+        denom = _trapz(wi, zi)
+        if denom > 0:
+            z_centroid[i] = _trapz(zi * wi, zi) / denom
+
+    return z_centroid.reshape(batch_shape)
+
+

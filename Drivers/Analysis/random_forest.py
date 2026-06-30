@@ -542,7 +542,8 @@ def plot_rf_results(results, top_n=None):
     top_n            = top_n or n_predictors
     top_n            = min(top_n, n_predictors)
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, max(4, top_n * 0.35 + 1)))
+    #fig, axes = plt.subplots(1, 2, figsize=(12, max(4, top_n * 0.35 + 1)))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6) )
 
     # --- predicted vs actual -----------------------------------------------
     ax = axes[0]

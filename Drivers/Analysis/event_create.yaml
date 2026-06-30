@@ -1,0 +1,24 @@
+# Example config for extract_events.py
+# Run with:  python extract_events.py --config event_config.yaml
+
+case: cam77_dyamond1_prod1
+nsteps: null
+start_date: null
+super_lat_range: [-90., 90.]
+
+regions:
+  - label: southern_ocean
+    zlev_event: 15000.
+    lat_range: [-60, -40]
+    lon_range: [0, 360]
+    exclude_orography: true
+    fracs: [0.995, 0.90, 0.50, 0.25, 0.125, 0.0625]
+    peak_footprint: [3, 3]
+
+  - label: northern_summer
+    zlev_event: 15000.
+    lat_range: [35, 70]
+    lon_range: [0, 360]
+    exclude_orography: true
+    fracs: [0.995, 0.90, 0.50, 0.25, 0.125, 0.0625]
+    peak_footprint: [3, 3]
