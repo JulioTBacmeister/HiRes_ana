@@ -7,6 +7,11 @@ import os
 from datetime import date
 import numpy as np
 import xarray as xr
+import pandas as pd
+
+
+
+
 
 rootdir_ = '../'
 if ( rootdir_ not in sys.path ):
@@ -158,6 +163,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
     htopo=Topo.PHIS.values/grav
     angll=Topo.ANGLL.values[0,:,:]
     mxdis=Topo.MXDIS.values[0,:,:]
+    sgh=Topo.SGH.values
     
     year,month,day,hour= start_date
     start_date_a = f"{year:04d}-{month:02d}-{day:02d}-{hour*3_600:05d}"
@@ -173,7 +179,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
         f_x = f'{base_x}.{date}.nc'
         files_x.append( f_x )
 
-    print( files_x[0],files_x[-1])
+    print( files_x[0],files_x[-1]  , flush=True  )
     # return
 
     tic_begin = timelog.perf_counter()
@@ -181,11 +187,11 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
 
     print( f" Dataset opened  , dtype of U,V {X.U.values.dtype} {X.V.values.dtype} " )
     X = X.sel( lat=slice(lat_south, lat_north)) 
-    print( f" Dataset opened  trimmed. {X.lat.values.min():6.2f} to {X.lat.values.max():6.2f} " )
+    print( f" Dataset opened  trimmed. {X.lat.values.min():6.2f} to {X.lat.values.max():6.2f} "   , flush=True  )
 
     tic_end = timelog.perf_counter()
     pTime = f"Read subsetted X w open_mfdata_set  {tic_end - tic_begin:0.4f} seconds"
-    print(pTime)
+    print(pTime   , flush=True  )
 
     if (dycore in ['SE','MPAS',]):
         ncdata='none'
@@ -225,7 +231,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
 
         tic_end = timelog.perf_counter()
         pTime = f"extracted upwp,...U,V,T etc  {tic_end - tic_begin:0.4f} seconds"
-        print(pTime)
+        print(pTime  , flush=True  )
         
         tic_begin = timelog.perf_counter()
         nt,nz,ny,nx = np.shape( u )  # This is the shape for the duration of this SE,MPAS block
@@ -235,7 +241,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
                 zeta[t,z,:,:] = nuti.Sphere_Curl2( f_x=u[t,z,:,:]  , f_y=v[t,z,:,:] , lat=lat, lon=lon , wrap=True, verbose=False)
         tic_end = timelog.perf_counter()
         pTime = f"Vorticity calc  {tic_end - tic_begin:0.4f} seconds"
-        print(pTime)
+        print(pTime  , flush=True  )
     
         tic_begin = timelog.perf_counter()
         if dycore == 'SE':
@@ -265,7 +271,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
 
         tic_end = timelog.perf_counter()
         pTime = f"rho geopht pint ... calc  {tic_end - tic_begin:0.4f} seconds"
-        print(pTime)
+        print(pTime  , flush=True  )
     
         tic_begin = timelog.perf_counter()
         epwp = np.sqrt( upwp**2 + vpwp**2 )
@@ -276,6 +282,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
             rho_epwp = epwp
             rho_upwp = upwp
             rho_vpwp = vpwp
+            rho_thpwp= epwp*0 -9999.9 #Obviously a tmp kluge
         elif dycore == 'MPAS':
             rho_epwp = rho * epwp
             rho_upwp = rho * upwp
@@ -287,7 +294,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
             
         tic_end = timelog.perf_counter()
         pTime = f"rho calc ... epwp  {tic_end - tic_begin:0.4f} seconds"
-        print(pTime)
+        print(pTime   , flush=True  )
 
     elif (dycore == 'UnitTest'):
         ncdata = X.ncdata
@@ -323,6 +330,7 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
             ze = np.tile(zgrid[None, :, :, :], (nt, 1, 1, 1) )
             zo = 0.5*( ze[:,0:nz,:,:] + ze[:,1:nz+1,:,:] )
 
+
         RhoProxy = 1.2 * plev
         u = X.U.values
         v = X.V.values
@@ -339,17 +347,19 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
         upwp, vpwp, epwp = np.zeros( ( nt,nz,ny,nx) ) , np.zeros( ( nt,nz,ny,nx) ) , np.zeros( ( nt,nz,ny,nx) ) 
         rho_upwp, rho_vpwp = np.zeros( ( nt,nz,ny,nx) ) , np.zeros( ( nt,nz,ny,nx) )
 
-    print(u.shape)
-    print(v.shape)
-    print(zeta.shape)
-    print(zo.shape)
+    print(u.shape   , flush=True  )
+    print(v.shape  , flush=True  )
+    print(zeta.shape  , flush=True  )
+    print(zo.shape  , flush=True  )
+
+    delp = pint[:,1:nz+1,:,:] - pint[:,0:nz,:,:] 
 
     ### TILT
     tic_begin = timelog.perf_counter()
     tilt=auti.tiltmag(u, v, zeta, zo)
     tic_end = timelog.perf_counter()
     pTime = f"tilting calc  {tic_end - tic_begin:0.4f} seconds"
-    print(pTime)
+    print(pTime  , flush=True  )
 
 
     ### FRONTOGENESIS (AND THETA)
@@ -360,20 +370,20 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
     del thx,thy,ux,uy,vx,vy
     tic_end = timelog.perf_counter()
     pTime = f"frontogenesis calc  {tic_end - tic_begin:0.4f} seconds"
-    print(pTime)
+    print(pTime  , flush=True  )
 
     ### STABILITY
     tic_begin = timelog.perf_counter()
     stab=auti.stability(th, zo)
     tic_end = timelog.perf_counter()
     pTime = f"stability calc  {tic_end - tic_begin:0.4f} seconds"
-    print(pTime)
+    print(pTime  , flush=True  )
 
 
     
     A_ = {  'dycore': dycore , 'base_file_name':base_x , 'case':case ,
             'ncdata': ncdata ,
-            'topofile':'topofile',
+            #'topofile':'topofile',
             'start_date': start_date_a , 
             'end_date': dates[-1] , 
             'nsteps': nsteps ,
@@ -390,7 +400,8 @@ def read_case( case=None , nsteps=None, step_size=None, start_date=None , dycore
             'RhoProxy': RhoProxy ,
             'pint': pint ,
             'pmid': pmid ,
-            'htopo': htopo , 'angll':angll, 'mxdis':mxdis,
+            'delp': delp ,
+            'htopo': htopo , 'angll':angll, 'mxdis':mxdis , 'sgh':sgh ,
             'rho': rho ,
             'rhoi': rhoi ,
             'zo': zo ,                   
@@ -472,3 +483,51 @@ def read_time_avg_case( case=None , nsteps=None, step_size=None, start_date=None
     X_tv.to_netcdf( f_out )
     print(f"  ... Wrote {f_out} ")
     return X_tv
+
+
+
+def write_src_fit_vars(filename, lat, lon, lev, nt,
+                       t0='2016-08-01', dt_hours=3.0,
+                       **fields):
+    """
+    Write 2D (t,y,x) diagnostic fields to NetCDF.
+
+    Parameters
+    ----------
+    filename : str
+        Output path, e.g. 'src_fit_vars.nc'
+    lat : (ny,) array
+    lon : (nx,) array
+    nt : int
+        Number of timesteps; a synthetic time axis is built as
+        t0 + n*dt_hours.
+    t0 : str
+        Start date for the made-up time array.
+    dt_hours : float
+        Timestep in hours.
+    **fields : name=array pairs, each (nt, ny, nx)
+        e.g. epwp_zl=epwp_zl_1, tilt_zs_zl=tilt_zs_zl_1, ...
+
+    Returns
+    -------
+    ds : the xr.Dataset that was written
+    """
+    time = pd.date_range(start=t0, periods=nt, freq=f'{dt_hours}h')
+
+    data_vars = {}
+    for name, arr in fields.items():
+        assert arr.shape == (nt, len(lat), len(lon)), \
+            f"{name} has shape {arr.shape}, expected {(nt, len(lat), len(lon))}"
+        data_vars[name] = (('time', 'lat', 'lon'), arr)
+
+    ds = xr.Dataset(
+        data_vars=data_vars,
+        coords={'time': time, 'lat': lat, 'lon': lon, 'lev':lev },
+    )
+
+    encoding = {v: {'zlib': True, 'complevel': 4} for v in data_vars}
+    ds.to_netcdf(filename, encoding=encoding)
+    print(f"Wrote {filename}: {list(data_vars)}, "
+          f"({nt} times x {len(lat)} lat x {len(lon)} lon)")
+    return ds
+

@@ -6,7 +6,7 @@
 #PBS -l select=1:ncpus=1:mem=800GB
 ### 
 ####PBS -l walltime=09:00:00
-#PBS -l walltime=01:00:00
+#PBS -l walltime=02:00:00
 ### Route the job to the casper queue
 #PBS -q casper
 ### Join output and error streams into single file
@@ -14,7 +14,7 @@
 
 module load conda
 
-conda activate npl-2025b
+conda activate npl-2026a
 
 #-------------------------------------
 # The Python code called below is

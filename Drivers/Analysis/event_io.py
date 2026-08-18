@@ -52,11 +52,14 @@ def pretty_lat(lat):
 
 def make_base_filename(El0):
     # Make a file name out El contents
-        
+
+    """
     if 'thpwp_4D' in El0:
         vers_="_v2"
     else:
         vers_=""
+    """
+    vers_="_v4"
 
     if 'fld' in El0:
         event_fld = El0.fld
@@ -67,16 +70,26 @@ def make_base_filename(El0):
         footp_ = f"_ftp{El0.peak_footprint[0]}X{El0.peak_footprint[1]}"
     else:
         footp_=""
+    if "subsample_time" in El0:
+        if El0.subsample_time == True :
+            subt_ = f"_subt"
+        else:
+            subt_= ""
+    else:
+        subt_= ""
         
     domain=""
     if 'exclude_orography' in El0:
         if El0.exclude_orography is not None:
             if El0.exclude_orography == True:
                 domain='_ocean'
-        
+
+    Frac_ = f"_Frac{El0.Frac_of_total_epwp:.0%}"
+
     latS,latN=pretty_lat( El0.lat_range )
     zlev_ = f"EvZ{El0.zlev_event/1000:g}km"
-    filen = f"{El0.case}_{El0.start_date}-x-{El0.end_date}_{latS}-{latN}{domain}_{zlev_}_{event_fld}{footp_}{vers_}"
+    #filen = f"{El0.case}_{El0.start_date}-x-{El0.end_date}_{latS}-{latN}{domain}_{zlev_}_{event_fld}{subt_}{footp_}{vers_}"
+    filen = f"{El0.case}_{El0.start_date}-x-{El0.end_date}_{latS}-{latN}{domain}_{zlev_}_{event_fld}{subt_}{footp_}{Frac_}{vers_}"
 
     return filen
 

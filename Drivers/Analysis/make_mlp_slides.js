@@ -4,6 +4,13 @@
  * Two modes:
  *   single — 2 or 3 slides for one MLP run
  *   sweep  — summary slide + 3-slide block per run
+ *
+ * The overview slide (architecture diagram, training setup, prediction
+ * context) is built entirely from meta.json — nothing is hardcoded.
+ * Required per-run keys: n_pred, hidden_dims, loss_power, z_targ, lat_lon,
+ * fields, train/test scores and Ns, fig paths.
+ * Optional per-run keys used if present: n_levs, n_times, activation,
+ * dropout, train_domain, record_label.
  */
 
 const pptxgen = require("pptxgenjs");
@@ -40,6 +47,27 @@ function scoreColor(r2) {
 function makeShadow() {
   return { type:"outer", blur:5, offset:2, angle:135, color:"000000", opacity:0.12 };
 }
+
+/**
+ * Parse hidden_dims into an array of ints.
+ * Accepts a JSON array ([32, 32]), a Python-tuple string ("(32, 32)"),
+ * or a bare comma/space-separated string ("32,32").
+ */
+function parseHiddenDims(hd) {
+  if (Array.isArray(hd)) return hd.map(Number);
+  if (typeof hd === "string") {
+    const nums = hd.match(/\d+/g);
+    return nums ? nums.map(Number) : [];
+  }
+  return [];
+}
+
+/** "(32, 32)" / [32,32] -> "32 → 32" for compact display */
+function hiddenDimsLabel(hd) {
+  const dims = parseHiddenDims(hd);
+  return dims.length ? dims.join(" → ") : String(hd);
+}
+
 function statBox(slide, x, y, w, h, label, value, valueColor) {
   slide.addShape("rect", { x, y, w, h,
     fill:{ color:C.white }, shadow:makeShadow(), line:{ color:C.light, width:0.5 } });
@@ -117,7 +145,7 @@ function buildRunSlides(pres, runMeta, slideNum, totalSlides) {
     fill:{ color:C.white }, line:{ color:C.light, width:0.5 }, shadow:makeShadow() });
   const cfgRows = [
     ["Fields",     runMeta.fields],
-    ["Predictors", `${runMeta.n_pred}  (${runMeta.hidden_dims} → 1)`],
+    ["Predictors", `${runMeta.n_pred}  (${hiddenDimsLabel(runMeta.hidden_dims)} → 1)`],
     ["Loss / domain", `|error|^${runMeta.loss_power}  |  z: ${runMeta.z_targ}  |  ${runMeta.lat_lon}`],
   ];
   cfgRows.forEach(([k,v],i) => {
@@ -212,23 +240,27 @@ function buildOverviewSlide(pres, m, slideNum, totalSlides) {
   // ── COLUMN 1: Architecture ─────────────────────────────────────────────
   colCard(s, 0, "Architecture", C.dark);
 
-  // mini network diagram — text boxes with arrows
-  const archX = colX[0] + 0.25;
+  // network diagram built from the run's actual hidden_dims
+  const hidden = parseHiddenDims(m.hidden_dims);
   const layers = [
-    { label: `Input  (${m.n_pred})`,    col: "4472C4" },
-    { label: "256 neurons",             col: "1C7293" },
-    { label: "256 neurons",             col: "1C7293" },
-    { label: "256 neurons",             col: "1C7293" },
-    { label: "128 neurons",             col: "2E75B6" },
-    { label: "Output  (1)",             col: "C00000" },
+    { label: `Input  (${m.n_pred})`, col: "4472C4" },
+    ...hidden.map(n => ({ label: `${n} neurons`, col: "1C7293" })),
+    { label: "Output  (1)",          col: "C00000" },
   ];
-  const boxW=3.45, boxH=0.30, boxGap=0.10;
+
+  // fit the stack into the card: shrink boxes if the net is deep
+  const archX      = colX[0] + 0.25;
+  const boxW       = 3.45;
   const archStartY = colY + headH + 0.12;
+  const opsNoteH   = 0.45;
+  const availH     = colH - headH - 0.12 - opsNoteH - 0.10;
+  const boxGap     = layers.length > 6 ? 0.06 : 0.10;
+  const boxH       = Math.min(0.30, availH/layers.length - boxGap);
+
   layers.forEach((l, i) => {
     const by = archStartY + i*(boxH+boxGap);
     s.addShape("rect", { x:archX, y:by, w:boxW, h:boxH,
-      fill:{ color:l.col }, line:{ color:l.col },
-      rectRadius: 0.04 });
+      fill:{ color:l.col }, line:{ color:l.col } });
     s.addText(l.label, { x:archX, y:by, w:boxW, h:boxH,
       fontSize:9.5, color:C.white, bold:true,
       align:"center", valign:"middle", fontFace:"Calibri", margin:0 });
@@ -240,9 +272,11 @@ function buildOverviewSlide(pres, m, slideNum, totalSlides) {
     }
   });
 
-  // per-layer ops note
+  // per-layer ops note — from meta if provided, with sensible defaults
+  const activation = m.activation || "LeakyReLU(0.1)";
+  const dropout    = m.dropout !== undefined ? m.dropout : 0.2;
   const opsY = archStartY + layers.length*(boxH+boxGap) + 0.05;
-  s.addText("Each hidden layer:  Linear → BatchNorm → LeakyReLU(0.1) → Dropout(0.2)",
+  s.addText(`Each hidden layer:  Linear → BatchNorm → ${activation} → Dropout(${dropout})`,
     { x:archX-0.05, y:opsY, w:boxW+0.10, h:0.38,
       fontSize:8.5, color:C.muted, italic:true,
       fontFace:"Calibri", align:"center", margin:0 });
@@ -273,19 +307,24 @@ function buildOverviewSlide(pres, m, slideNum, totalSlides) {
   const predItems = [
     { text:"Inputs (predictors)" },
     { text:`${m.n_pred} features from tropospheric fields`, sub:true },
-    { text:`u, v, stab, zeta, tilt, fgf`, sub:true },
-    { text:"At 7 vertical levels, 4 timesteps", sub:true },
+    { text:`Fields: ${m.fields}`, sub:true },
+  ];
+  if (m.n_levs !== undefined && m.n_times !== undefined) {
+    predItems.push(
+      { text:`At ${m.n_levs} vertical levels, ${m.n_times} timesteps`, sub:true });
+  }
+  predItems.push(
     { text:"Spatial patch: " + m.lat_lon, sub:true },
     { text:"Target" },
     { text:`epwp (GW momentum flux) at ${m.z_targ}`, sub:true },
     { text:"Pressure-weighted, spatially averaged", sub:true },
     { text:"Training domain" },
-    { text:"Southern Ocean (SH), DYAMOND 3.75km", sub:true },
-    { text:"40-day record, Aug 2016", sub:true },
+    { text:(m.train_domain || "Southern Ocean (SH), DYAMOND 3.75km"), sub:true },
+    { text:(m.record_label || "40-day record, Aug 2016"), sub:true },
     { text:"Transfer test" },
     { text:"SH-trained model → NH (no retraining)", sub:true },
     { text:"Tests physical generality of predictors", sub:true },
-  ];
+  );
   bullet(s, 2, predItems, colY + headH + 0.18);
 
   addPageNum(s, slideNum, totalSlides);

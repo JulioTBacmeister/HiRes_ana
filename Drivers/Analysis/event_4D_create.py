@@ -41,7 +41,7 @@ def load_case(case, nsteps=None, start_date=None, super_lat_range=(-90., 90.)):
 
 
 def extract_events(A, *, zlev_event, lat_range, lon_range=(0, 360),
-                    exclude_orography=True,
+                    exclude_orography=True, subsample_time=False,
                     fracs=(0.995, 0.90, 0.50, 0.25, 0.125, 0.0625),
                     peak_footprint=(3, 3), return_after_stage1=False,
                     label=None):
@@ -54,11 +54,16 @@ def extract_events(A, *, zlev_event, lat_range, lon_range=(0, 360),
         lon_range=list(lon_range),
         exclude_orography=exclude_orography,
         peak_footprint=tuple(peak_footprint),
+        subsample_time=subsample_time,
         return_after_stage1=return_after_stage1,
     )
 
+    eio.write_event_ds(El=El )
+
     f = eio.pickle_write(El)
     print(f"[{label or 'region'}] wrote {f}")
+
+
     del El
     return f
 

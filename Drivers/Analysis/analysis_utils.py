@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 
 from scipy.ndimage import label
@@ -282,15 +283,24 @@ def cube4D( event_list, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_range
     
     #print( count )
 
+
+
+
+
     wt,wy,wx = window
+    st = 2 # if subsample_time else 1  # step of 2 = every other index
+    wt_c = (wt // st) + 1  # number of samples taken
+
+    print( f' in auti wt_c {wt_c}' )
+    
     if TZHkey == 'tzyx':
         aa_pad = np.pad(aa, ((wt, wt), (0, 0), (wy, wy), (0, 0)), mode='edge')
         aa_pad = np.pad(aa_pad, ((0, 0), (0, 0), (0, 0), (wx, wx)), mode='wrap')
-        aa_comp = np.zeros( ( count , wt+1, nz, 2*wy+1, 2*wx+1 )  )
+        aa_comp = np.zeros( ( count , wt_c+1, nz, 2*wy+1, 2*wx+1 )  )
     elif TZHkey == 'tyx':
         aa_pad = np.pad(aa, ((wt, wt), (wy, wy), (0, 0)), mode='edge')
         aa_pad = np.pad(aa_pad, ((0, 0), (0, 0), (wx, wx)), mode='wrap')
-        aa_comp = np.zeros( ( count , wt+1, 2*wy+1, 2*wx+1 )  )
+        aa_comp = np.zeros( ( count , wt_c+1, 2*wy+1, 2*wx+1 )  )
     c=0
     #for evs in event_list:
     #    for ev in evs:
@@ -306,9 +316,10 @@ def cube4D( event_list, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_range
                 x=ev['ix'] + wx
                 t_ = t + wt
                 if TZHkey == 'tzyx':
-                    aa_comp[c, 0:wt+1, :,0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1, :, y-wy:y+wy+1, x-wx:x+wx+1 ] 
+                    #aa_comp[c, 0:wt+1, :,0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1, :, y-wy:y+wy+1, x-wx:x+wx+1 ] 
+                    aa_comp[c, 0:wt_c, :, 0:2*wy+1, 0:2*wx+1] =  aa_pad[t_-wt:t_+1:st, :, y-wy:y+wy+1, x-wx:x+wx+1]                    
                 elif TZHkey == 'tyx':
-                    aa_comp[c, 0:wt+1, 0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1 ,y-wy:y+wy+1,x-wx:x+wx+1]                 
+                    aa_comp[c, 0:wt+1, 0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1:st ,y-wy:y+wy+1,x-wx:x+wx+1]                 
                 c=c+1
     
     #print( c )
@@ -318,7 +329,7 @@ def cube4D( event_list, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_range
     #    for ie in np.arange( nevs ):
     return aa_comp
 
-def cube4D_ds( event_ds, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_range=[-90,90], lon_range=[0,360], mask2D=None ):
+def cube4D_ds( event_ds, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_range=[-90,90], lon_range=[0,360], mask2D=None, subsample_time=False ):
     #################################################################################################################
     #  Returns a 4D (note vertical dim is constant) picture of input aa around events in event_list. 
     #  Size of picture is determined by window argument, where window=[wt,wy,wx] ; itime,ilat,ilon resp.
@@ -348,16 +359,23 @@ def cube4D_ds( event_ds, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_rang
     #print( count )
 
     #return 999999.
+
+    wt,wy,wx = window
+    st = 2 if subsample_time else 1  # step of 2 = every other index
+    wt_c = (wt // st) #+ 1  # number of samples taken
+    if ( st*wt_c != wt ):
+        sys.exit( f"Shouldn't subsample unless wt is even: wt={wt}" )
+    #print( f' in auti.cube4D_ds: wt {wt}, wt_c {wt_c}' )
     
     wt,wy,wx = window
     if TZHkey == 'tzyx':
         aa_pad = np.pad(aa, ((wt, wt), (0, 0), (wy, wy), (0, 0)), mode='edge')
         aa_pad = np.pad(aa_pad, ((0, 0), (0, 0), (0, 0), (wx, wx)), mode='wrap')
-        aa_comp = np.zeros( ( count , wt+1, nz, 2*wy+1, 2*wx+1 )  )
+        aa_comp = np.zeros( ( count , wt_c+1, nz, 2*wy+1, 2*wx+1 )  )
     elif TZHkey == 'tyx':
         aa_pad = np.pad(aa, ((wt, wt), (wy, wy), (0, 0)), mode='edge')
         aa_pad = np.pad(aa_pad, ((0, 0), (0, 0), (wx, wx)), mode='wrap')
-        aa_comp = np.zeros( ( count , wt+1, 2*wy+1, 2*wx+1 )  )
+        aa_comp = np.zeros( ( count , wt_c+1, 2*wy+1, 2*wx+1 )  )
 
     time_comp = np.zeros( ( count )  )
     lat_comp = np.zeros( ( count )  )
@@ -376,18 +394,52 @@ def cube4D_ds( event_ds, aa , lat, lon, window=[5,5,5] , TZHkey='tzyx', lat_rang
             x=ix_event[v] + wx
             t_ = t + wt
             if TZHkey == 'tzyx':
-                aa_comp[c, 0:wt+1, :,0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1, :, y-wy:y+wy+1, x-wx:x+wx+1 ] 
+                #aa_comp[c, 0:wt+1, :,0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1, :, y-wy:y+wy+1, x-wx:x+wx+1 ] 
+                aa_comp[c, 0:wt_c+1, :, 0:2*wy+1, 0:2*wx+1] =  aa_pad[t_-wt:t_+1:st, :, y-wy:y+wy+1, x-wx:x+wx+1]                    
             elif TZHkey == 'tyx':
-                aa_comp[c, 0:wt+1, 0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1 ,y-wy:y+wy+1,x-wx:x+wx+1]                 
+                #aa_comp[c, 0:wt+1, 0:2*wy+1, 0:2*wx+1 ] = aa_pad[t_-wt:t_+1 ,y-wy:y+wy+1,x-wx:x+wx+1]                 
+                aa_comp[c, 0:wt_c+1, 0:2*wy+1, 0:2*wx+1] =  aa_pad[t_-wt:t_+1:st, y-wy:y+wy+1, x-wx:x+wx+1]                    
             time_comp[c] , lat_comp[c] , lon_comp[c] = t, lat0, lon0
             c=c+1
     
     #print( c )
+
     
+    reltime_raw = np.zeros( wt+1 )
+    for t in np.arange( wt+1):
+        reltime_raw[t] = -wt+t
+    reltime_x = np.zeros( wt_c+1 )
+    reltime_x = reltime_raw[ 0:wt+1:st ]
+
+    print( f"relative time array: {reltime_x} " )
     
     #for t in np.arange( nt ):
     #    for ie in np.arange( nevs ):
     return aa_comp,time_comp,lat_comp,lon_comp
+    
+def cube4D_relative_time( window=[5,5,5] , subsample_time=False ):
+    #################################################################################################################
+    #  Returns a 4D (note vertical dim is constant) picture of input aa around events in event_list. 
+    #  Size of picture is determined by window argument, where window=[wt,wy,wx] ; itime,ilat,ilon resp.
+
+
+    wt,wy,wx = window
+    st = 2 if subsample_time else 1  # step of 2 = every other index
+    wt_c = (wt // st) #+ 1  # number of samples taken
+    if ( st*wt_c != wt ):
+        sys.exit( f"Shouldn't subsample unless wt is even: wt={wt}" )
+    
+    reltime_raw = np.zeros( wt+1 )
+    for t in np.arange( wt+1):
+        reltime_raw[t] = -wt+t
+    reltime_x = np.zeros( wt_c+1 )
+    reltime_x = reltime_raw[ 0:wt+1:st ]
+
+    print( f"New function for relative time array: {reltime_x} " )
+    
+    #for t in np.arange( nt ):
+    #    for ie in np.arange( nevs ):
+    return reltime_x
 
 def collapseSpace( aa_comp  , TZHkey='etzyx'  ):
 
@@ -901,7 +953,7 @@ def big_title(Epl):
     return big_title
     
 ###############################################################################
-def plot_xavg_compos( El=None, fld=None ):
+def plot_xavg_compos( El=None, fld=None, **kwargs ):
 
     if fld=="zeta_4D":
         fldlv=1.5e-5*np.linspace(-6,6,num=13)
@@ -919,6 +971,13 @@ def plot_xavg_compos( El=None, fld=None ):
         fldlv=31
         cmap='bwr'
 
+    if "plot_v" in kwargs:
+        plot_v_ = kwargs["plot_v"]
+    else:
+        plot_v_ = False
+
+
+    
     ulv=np.linspace(-60,60,num=27)
     thlv=np.concatenate( (270.+np.arange(11)*10 , 380.+ np.arange(11)*20) )   #np.linspace(270,600,num=27)
     mflv=[0.001,0.002,.005, .01, .02]
@@ -938,12 +997,17 @@ def plot_xavg_compos( El=None, fld=None ):
         Epl_vv=euti.avg_over_v(Epl)
         zeta_vxv=Epl_vv.zeta_4D.mean(axis=3)
         u_vxv=Epl_vv.u_4D.mean(axis=3)
+        if plot_v_ == True:
+            v_vxv=Epl_vv.v_4D.mean(axis=3)
         th_vxv=Epl_vv.th_4D.mean(axis=3)
         epwp_vxv=Epl_vv.epwp_4D.mean(axis=3)
         fld_vxv=Epl_vv[fld].mean(axis=3)
         colo = ax.contourf( np.arange(ny_v), zlev, fld_vxv[nt_v-1,:,:], cmap=cmap , levels=fldlv)
         lin1 = ax.contour( np.arange(ny_v), zlev, u_vxv[nt_v-1,:,:] , levels=ulv)
         ax.clabel(lin1, inline=True, fontsize=8, fmt='%1.0f')
+        if plot_v_ == True:
+            lin1b = ax.contour( np.arange(ny_v), zlev, v_vxv[nt_v-1,:,:] , levels=0.5*ulv, colors='blue')
+            ax.clabel(lin1b, inline=True, fontsize=8, fmt='%1.0f')
         lin2 = ax.contour( np.arange(ny_v), zlev, th_vxv[nt_v-1,:,:] , levels=thlv, colors='red')
         ax.clabel(lin2, inline=True, fontsize=8, fmt='%1.0f')
         lin3 = ax.contour( np.arange(ny_v), zlev, epwp_vxv[nt_v-1,:,:] , levels=mflv, colors='black')
@@ -956,6 +1020,58 @@ def plot_xavg_compos( El=None, fld=None ):
     cbar = fig.colorbar(colo, cax=cax, orientation='horizontal')
     cbar.set_label(f"{fld}  s{r'$^{-1}$' }")
 
+###############################################################################
+def plot_yxavg_compos( El=None, **kwargs ):
+
+
+    fields = [
+        ('tilt_4D',     'tilt'),
+        ('vmag_4D',     'wind speed'),
+        ('abs_zeta_4D', 'absolute vorticity'),
+    ]
+
+    colors = ['red','blue','green']
+    
+    nxplo,nyplo=len( El ),1
+    fig,axs=plt.subplots( nyplo,nxplo , figsize=(nxplo*7+1,nyplo*8) )
+    axs=axs.flatten()
+
+    p = 0
+    
+    for Epl in El:
+        ax0 = axs[p]
+        zlev = Epl.zlevA
+        Epl_vv = euti.avg_over_v(Epl)
+    
+        # Three axes sharing the same y-axis
+        ax1 = ax0.twiny()
+        ax2 = ax0.twiny()
+    
+        # Move the third x-axis above the second one
+        ax2.spines['top'].set_position(('outward', 40))
+    
+        xaxes = [ax0, ax1, ax2]
+
+        f=0
+        for axx, (fld, label) in zip(xaxes, fields):
+            colorx=colors[f]
+            fld_prof = np.mean(Epl_vv[fld], axis=(2, 3))
+            line, = axx.plot(fld_prof[-1, :], zlev, lw=2.5, label=label,color=colorx)
+    
+            # Match each x-axis label and ticks to its curve
+            color = line.get_color()
+            axx.set_xlabel(label, color=color)
+            axx.tick_params(axis='x', colors=color)
+            axx.spines['top'].set_color(color)
+            f +=1
+        
+        ax0.set_ylim(0, 20_000)
+        ax0.set_ylabel('Height (m)')
+        ax0.set_title(big_title(Epl), pad=55)
+    
+        p += 1
+        
+ 
 ############################################################
 # gw_05_steering_level.py
 # ========================
@@ -970,7 +1086,105 @@ def _trapz(y, x):
     """
     return np.sum(0.5 * (y[1:] + y[:-1]) * np.diff(x))
 
+############################################################
+def compute_weighted_centroid_v2(w, z, z_min=None, z_max=None):
+    """
+    Vectorized, per-profile grids allowed. Exactly equivalent to the
+    interpolate-cutoff + trapz version (same piecewise-linear integral).
+    """
+    w = np.asarray(w, dtype=float)
+    z = np.asarray(z, dtype=float)
+    if z.shape != w.shape:
+        z = np.broadcast_to(z, w.shape)
 
+    # make each profile ascending in z (flip descending rows)
+    desc = z[..., -1] < z[..., 0]
+    if np.any(desc):
+        m = desc[..., None]
+        z = np.where(m, z[..., ::-1], z)
+        w = np.where(m, w[..., ::-1], w)
+
+    z1, z2 = z[..., :-1], z[..., 1:]
+    w1, w2 = w[..., :-1], w[..., 1:]
+
+    # clip each segment to [z_min, z_max]
+    a = np.maximum(z1, z_min) if z_min is not None else z1
+    b = np.minimum(z2, z_max) if z_max is not None else z2
+
+    dz    = z2 - z1
+    valid = (b > a) & (dz > 0)
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        s = np.where(dz > 0, (w2 - w1) / np.where(dz > 0, dz, 1.0), 0.0)
+
+    wa = w1 + s * (a - z1)
+    wb = w1 + s * (b - z1)
+    zm = 0.5 * (a + b)
+    wm = w1 + s * (zm - z1)
+
+    seg_w  = np.where(valid, 0.5 * (wa + wb) * (b - a), 0.0)          # ∫ w dz
+    seg_zw = np.where(valid,
+                      (b - a) / 6.0 * (a*wa + 4.0*zm*wm + b*wb), 0.0) # ∫ z w dz (Simpson, exact)
+
+    denom = seg_w.sum(axis=-1)
+    numer = seg_zw.sum(axis=-1)
+
+    out = np.full(denom.shape, np.nan)
+    good = denom > 0
+    out[good] = numer[good] / denom[good]
+    return out
+    
+####################################################################################
+def compute_weighted_centroid_fast(w, z, z_min=None, z_max=None):
+    w = np.asarray(w, dtype=float)
+    z = np.asarray(z, dtype=float)
+
+    # collapse a tiled grid (identical rows) to 1D for the fast path
+    if z.shape == w.shape and z.ndim > 1:
+        z2 = z.reshape(-1, z.shape[-1])
+        if (z2 == z2[0]).all():
+            z = z2[0]
+
+    if z.ndim != 1:
+        return _compute_weighted_centroid_loop(w, z, z_min, z_max)  # old code
+
+    batch_shape = w.shape[:-1]
+    W = w.reshape(-1, w.shape[-1])
+
+    order = np.argsort(z)
+    zs = z[order]
+    Ws = W[:, order]
+
+    nan_out = np.full(W.shape[0], np.nan)
+
+    if z_min is not None and z_min > zs[0]:
+        if z_min >= zs[-1]:
+            return nan_out.reshape(batch_shape)      # cutoff above profile top
+        j = np.searchsorted(zs, z_min, side='right') # zs[j-1] <= z_min < zs[j]
+        frac  = (z_min - zs[j-1]) / (zs[j] - zs[j-1])
+        w_cut = Ws[:, j-1] + frac * (Ws[:, j] - Ws[:, j-1])
+        zs = np.concatenate(([z_min], zs[j:]))
+        Ws = np.concatenate([w_cut[:, None], Ws[:, j:]], axis=1)
+
+    if z_max is not None and z_max < zs[-1]:
+        if z_max <= zs[0]:
+            return nan_out.reshape(batch_shape)      # cutoff below profile bottom
+        j = np.searchsorted(zs, z_max, side='left')  # zs[j-1] < z_max <= zs[j]
+        frac  = (z_max - zs[j-1]) / (zs[j] - zs[j-1])
+        w_cut = Ws[:, j-1] + frac * (Ws[:, j] - Ws[:, j-1])
+        zs = np.concatenate((zs[:j], [z_max]))
+        Ws = np.concatenate([Ws[:, :j], w_cut[:, None]], axis=1)
+
+    denom = np.trapz(Ws,      zs, axis=-1)
+    numer = np.trapz(Ws * zs, zs, axis=-1)
+
+    out = np.full(W.shape[0], np.nan)
+    good = denom > 0
+    out[good] = numer[good] / denom[good]
+    return out.reshape(batch_shape)
+
+
+####################################################################################
 def compute_weighted_centroid(w, z, z_min=None, z_max=None):
     """
     Compute the height centroid of a positive-definite weight profile.
@@ -1049,4 +1263,86 @@ def compute_weighted_centroid(w, z, z_min=None, z_max=None):
 
     return z_centroid.reshape(batch_shape)
 
+####################################################################################
 
+def _is_pressure_like(coord):
+    """
+    True if coordinate increases toward the surface (pressure-like),
+    False if it decreases (height-like). Assumes CAM top-down layout
+    (k=0 = TOA, k=pver-1 = surface); raises if columns disagree.
+    """
+    inc = coord[:, -1] > coord[:, 0]
+    if inc.all():
+        return True
+    if (~inc).all():
+        return False
+    raise ValueError("mixed coordinate orientation across columns")
+
+####################################################################################
+
+
+def nearest_level(z_target, zm):
+    """
+    Map centroid heights to nearest level indices.
+
+    z_target : (ncol,) centroid heights, NaN = no signal
+    zm       : (ncol, pver) level heights, top-down (k=0 = TOA)
+
+    Returns k : (ncol,) int, -1 sentinel where z_target is NaN.
+    """
+    k = np.full(z_target.shape, -1, dtype=int)
+    valid = np.isfinite(z_target)
+    if np.any(valid):
+        d = np.abs(zm - z_target[..., None])
+        k[valid] = np.argmin(d, axis=-1)[valid]
+    return k
+
+####################################################################################
+def vorticity_centroid_levels(vorticity, coord, bound_surface=None, bound_top=None):
+    """
+    Steering level: centroid of |vorticity| between bound_surface and
+                    bound_top. Launch level: centroid restricted to
+                    levels above (physically higher than) the steering
+                    level.
+
+    vorticity : (ncol, pver)
+    coord     : (ncol, pver) vertical coordinate, height (m) OR
+                pressure (Pa), CAM top-down (k=0 = TOA)
+    bound_surface : float or None, in coord units
+        Near-surface cutoff (PBL exclusion), e.g. 1000. (m) or 85000. (Pa)
+    bound_top : float or None, in coord units
+        Upper cutoff, e.g. 20000. (m) or 5000. (Pa)
+
+    Returns
+    -------
+    steering_level, launch_level : (ncol,) int, -1 = no signal
+    c_steer, c_launch : (ncol,) float in coord units, NaN = no signal
+    """
+    absvort = np.abs(vorticity)
+    ncol = absvort.shape[0]
+
+    # map physical bounds to coordinate min/max
+    if _is_pressure_like(coord):
+        coord_min, coord_max = bound_top, bound_surface
+    else:
+        coord_min, coord_max = bound_surface, bound_top
+
+    # --- first centroid: full column between the bounds ---
+    c_steer = compute_weighted_centroid_v2(absvort, coord,
+                                        z_min=coord_min, z_max=coord_max)
+    steering_level = nearest_level(c_steer, coord)
+
+    # --- restrict to levels above the steering level (smaller k = higher) ---
+    w_top = absvort.copy()
+    for i in range(ncol):
+        k = steering_level[i]
+        if k >= 0:
+            w_top[i, k:] = 0.0
+        else:
+            w_top[i, :] = 0.0
+
+    # --- second centroid: "top half" of the profile ---
+    c_launch = compute_weighted_centroid_v2(w_top, coord)
+    launch_level = nearest_level(c_launch, coord)
+
+    return steering_level, launch_level, c_steer, c_launch

@@ -71,6 +71,7 @@ def make_El(A=None,
             zlev_event=None, 
             lat_range=None,lon_range=None,exclude_orography=True,
             peak_footprint=(3,3),
+            subsample_time=False,
             return_after_stage1=False):
 
     event_fld = 'rho_epwp'
@@ -98,6 +99,8 @@ def make_El(A=None,
     Total_events=len(xs)
     print( f"looking at Z={zlev[ z_event ]}" )
     print( f"There are a total of {Total_events} gridpoints in {lon_range}X{lat_range} " )
+    print(f">>> ======== Initial analysis in make_El ===========" , flush=True )
+    print(f"    note: these numbers are based on grid points NOT local maxima " , flush=True )
     for b in fracs:
         xoo=np.argmin( np.abs(cumu-b) )
         print(f" fraction={100*b:5.2f}% of total epwp is in events with epwp > {xs[xoo]:.5f}. Carried by N={len(xs[xoo:]):6d} events or {100*len(xs[xoo:])/len(xs):5.2f}%  ")
@@ -105,15 +108,19 @@ def make_El(A=None,
         thresholds.append( np.array([ xs[xoo],1.e6] ) )
         N_events.append( len(xs[xoo:]) )
 
-    print(f" Threshholds {thresholds}")
+    print(f" Threshholds {thresholds}"  , flush=True )
+    print(f"   ======== Initial analysis in make_El =========== <<< " , flush=True )
+    print(f" ... " , flush=True )
     
     thresh=[0.,1e6]
     second_thresh=None #second_thresholds[ithr]
+    print(f">>> ======== second sort in make_ds ===========" , flush=True )
     ds =  make_ds(fld=A.rho_epwp[:,:,:,:], lon=lon, lat=lat, zlev=zlev, time=time, 
                      thresh=thresh,second_thresh=second_thresh,zlev_event=zlev_event, 
                      lat_range=lat_range, lon_range=lon_range,
                      peak_footprint=peak_footprint )
     
+    print(f"   ======== second sort in make_ds =========== <<<" , flush=True )
     # get shape of varaiables
     nt,nz,ny,nx = np.shape( A.u )
     
@@ -123,7 +130,7 @@ def make_El(A=None,
     htopo_MMM = auti.collapseSpace( htopo_4D_x , TZHkey='etyx')
     htopo_super_max = htopo_MMM[2].max( axis=1 )
 
-    print( f"N events: = {ds.sizes['index']} BEFORE any topo filtering !!!! " )
+    print( f"N events: = {ds.sizes['index']} BEFORE any topo filtering !!!! "   , flush=True )
  
     ########################################
     # Exclude events with topography nearby
@@ -138,6 +145,10 @@ def make_El(A=None,
     
     x=ds.epwp_max.values
     cumu,xs=auti.cumul_big_to_small( x, plot_it=True )
+
+    print(f" shape of ds.epwp_max after orographic excl (if applied) {np.shape(x)} " , flush=True )
+
+
     
     thresh_fracs=[]
     thresholds=[]
@@ -146,7 +157,7 @@ def make_El(A=None,
     print( f"There are a total of {Total_events} events in {lon_range}X{lat_range}, exclude orography={exclude_orography} " )
     for b in fracs:
         xoo=np.argmin( np.abs(cumu-b) )
-        print(f" fraction={100*b:5.2f}% of total epwp is in events with epwp > {xs[xoo]:.5f}. Carried by N={len(xs[xoo:]):6d} events or {100*len(xs[xoo:])/len(xs):5.2f}%  ")
+        print(f" fraction={100*b:5.2f}% of total epwp is in events with epwp > {xs[xoo]:.5f}. Carried by N={len(xs[xoo:]):6d} events or {100*len(xs[xoo:])/len(xs):5.2f}%  "  , flush=True )
         thresh_fracs.append(xs[xoo])
         thresholds.append( np.array([ xs[xoo],1.e6] ) )
         N_events.append( len(xs[xoo:]) )
@@ -169,11 +180,17 @@ def make_El(A=None,
         ## for MPAS 3km
         big_window=[3,5,5]
         lil_window=[3,2,2]
+        if subsample_time == True:
+            big_window=[4,5,5]
+            lil_window=[4,2,2]
+            
         
     elif A.dycore == 'SE':
         # for ne240
         big_window=[2,5,5]
         lil_window=[2,2,2]
+        if subsample_time == True:
+            sys.exit( f" Cannot subsample time in ne240 runs " )
     
     
     ithr=0
@@ -217,6 +234,7 @@ def make_El(A=None,
         if second_thresh is not None:
             E_["second_threshold"] = second_thresh        
         E_['exclude_orography'] = exclude_orography
+        E_['subsample_time'] = subsample_time
         E_['lat_range']=lat_range
         E_['lon_range']=lon_range
         E_['N_events'] = ds.sizes['index']
@@ -238,18 +256,28 @@ def make_El(A=None,
         
         E_['window_tyx']=window
         E_['peak_footprint']=peak_footprint
-        
-        htopo_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=htopo_t , lon=lon, lat=lat, window=window , TZHkey='tyx', lat_range=lat_range, lon_range=lon_range )
-        zeta_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.zeta , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
-        tilt_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.tilt , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
-        fgf_4D, time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=A.fgf , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
-        epwp_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.rho_epwp , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
-        upwp_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.rho_upwp , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
-        vpwp_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.rho_vpwp , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
-        u_4D, time4D,lat4D,lon4D    = auti.cube4D_ds( event_ds=ds, aa=A.u , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
-        v_4D, time4D,lat4D,lon4D    = auti.cube4D_ds( event_ds=ds, aa=A.v , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
-        th_4D, time4D,lat4D,lon4D   = auti.cube4D_ds( event_ds=ds, aa=A.th , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
-        stab_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.stab , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+
+
+
+        print( f" Some settings: ")
+        print( f"    subsample_time={subsample_time} " , flush=True )
+        print( f"    window={window} " , flush=True )
+
+        reltime_x = auti.cube4D_relative_time( window=window, subsample_time=subsample_time )
+        E_['relative_time'] = reltime_x
+
+        htopo_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=htopo_t , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tyx', lat_range=lat_range, lon_range=lon_range )
+        zeta_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.zeta , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+        tilt_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.tilt , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+        fgf_4D, time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=A.fgf , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+        epwp_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.rho_epwp , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+        upwp_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.rho_upwp , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+        vpwp_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.rho_vpwp , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+        u_4D, time4D,lat4D,lon4D    = auti.cube4D_ds( event_ds=ds, aa=A.u , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+        v_4D, time4D,lat4D,lon4D    = auti.cube4D_ds( event_ds=ds, aa=A.v , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+        th_4D, time4D,lat4D,lon4D   = auti.cube4D_ds( event_ds=ds, aa=A.th , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+        stab_4D, time4D,lat4D,lon4D = auti.cube4D_ds( event_ds=ds, aa=A.stab , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+
     
         E_['time4D'], E_['lat4D'], E_['lon4D'] = time4D,lat4D,lon4D
         E_['u_4D'], E_['v_4D'], E_['htopo_4D'] = u_4D,v_4D,htopo_4D
@@ -259,15 +287,18 @@ def make_El(A=None,
         E_['stab_4D'] = stab_4D
         
         if 'precl' in A:
-            precl_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=A.precl , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+            precl_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=A.precl , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
             E_['precl_4D'] = precl_4D
+        if 'precc' in A:
+            precc_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=A.precc , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+            E_['precc_4D'] = precl_4D
         if 'rho_thpwp' in A:
-            thpwp_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=A.rho_thpwp , lon=lon, lat=lat, window=window , TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
+            thpwp_4D , time4D,lat4D,lon4D  = auti.cube4D_ds( event_ds=ds, aa=A.rho_thpwp , lon=lon, lat=lat, window=window, subsample_time=subsample_time,  TZHkey='tzyx', lat_range=lat_range, lon_range=lon_range )
             E_['thpwp_4D'] = thpwp_4D
     
         E = AttrDict( E_ )
         El.append(E)
-        print( f" fininshed threshold = {thresh}. N events: = {ds.sizes['index']} " )
+        print( f" fininshed threshold = {thresh}. N events: = {ds.sizes['index']} " , flush=True )
         ithr=ithr+1
 
     return El
@@ -466,7 +497,47 @@ def combine_event_dicts(El_strong, El_weak, label_key='event_strength'):
     #return El_combined, source_labels, split_idx
     return Eco
 
+def trim_Eco( Eco=None, indicator=None ):
 
+    # Takes events (nv dimension) that satisfy condition indicator ==True
+    Eco_trim = copy.deepcopy( Eco )
+
+    return Eco_trim
+
+def subselect_events(Eco, keep, event_axis=0):
+    """Return a new Eco with events filtered by boolean mask `keep`."""
+    keep = np.asarray(keep, dtype=bool)
+    out = {}
+    for key, val in Eco.items():
+        if key.endswith('4D'):
+            out[key] = np.take(val, np.flatnonzero(keep), axis=event_axis)
+        else:
+            out[key] = val
+    out['N_events'] = int(keep.sum())
+    Eco_x = AttrDict( out )
+    return Eco_x
+    
+def vtime_avg_events(Eco):
+    """Return a new Eco with events averaged along internal time axis"""
+    out = {}
+    """
+    for key, val in Eco.items():
+        if (key=='epwp_4D'):
+            print( f" In vtime_avg_events {key} - shape {np.shape(val) } " )
+            out[key] = np.expand_dims(  val[:,-1,:,:,:] , axis=1 )
+    """
+    for key, val in Eco.items():
+        if (key.endswith('4D') and key != 'wacko_nut_epwp_4D'):
+            print( f" In vtime_avg_events {key} - shape {np.shape(val) } " )
+            if len( np.shape(val) ) >= 2:
+                out[key] = np.expand_dims(  np.mean( val, axis=1 ) , axis=1 )
+            else:
+                out[key] = val
+        else:
+            out[key] = val
+    Eco_x = AttrDict( out )
+    return Eco_x
+    
 def subsample_event_dicts(El, indices):
     """
     Subsample event dict on proviede indices of 
