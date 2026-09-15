@@ -1,0 +1,22 @@
+ Will,
+
+All the relevant notebooks and functions are here:
+
+/glade/work/juliob/HiRes_ana_dev/Drivers/Analysis
+
+The MLP calculation is in:
+
+EventCompositeAna_NN-sweep.ipynb
+
+The dynamic steering and launch level predictors are generated if you run with do_sweep[2]=True (all others=False) in Cell #5.
+
+The notebook that returns to the raw model results as input and fits the power laws is this:
+
+BasicAna4GWP-fitting.ipynb
+
+It also does a dynamic launch and steering level calculation. 
+
+Thanks. If you run into any trouble send me an email.  I'll try to reply if I can.
+
+-Julio
+

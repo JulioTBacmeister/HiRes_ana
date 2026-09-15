@@ -1,0 +1,313 @@
+{
+ "mode": "full_both",
+ "names": [
+  "D",
+  "Dl",
+  "Dg",
+  "P",
+  "Us",
+  "Ul",
+  "Zs",
+  "Zt"
+ ],
+ "rows": [
+  {
+   "index": 0,
+   "complexity": 1,
+   "loss": 1.1406765,
+   "equation": "0.053886607",
+   "r_train": -2.699793233750441e-16,
+   "r_test": 3.3821948490893986e-18,
+   "r_nh": -1.0432030540758301e-16
+  },
+  {
+   "index": 1,
+   "complexity": 4,
+   "loss": 0.89829177,
+   "equation": "P * 0.20545635",
+   "r_train": 0.5018841323935258,
+   "r_test": 0.40015867231473334,
+   "r_nh": 0.5711495147619151
+  },
+  {
+   "index": 2,
+   "complexity": 5,
+   "loss": 0.81233025,
+   "equation": "sqrt(P) + -0.7720959",
+   "r_train": 0.5460921280692531,
+   "r_test": 0.4185425168422816,
+   "r_nh": 0.5987753881540319
+  },
+  {
+   "index": 3,
+   "complexity": 6,
+   "loss": 0.7936833,
+   "equation": "log(P + Dg)",
+   "r_train": 0.6173496307985151,
+   "r_test": 0.5425438422558881,
+   "r_nh": 0.6573888665461735
+  },
+  {
+   "index": 4,
+   "complexity": 7,
+   "loss": 0.7356695,
+   "equation": "log(sqrt(P + D))",
+   "r_train": 0.6161329515650189,
+   "r_test": 0.5524628306826113,
+   "r_nh": 0.6168075227781296
+  },
+  {
+   "index": 5,
+   "complexity": 8,
+   "loss": 0.69278634,
+   "equation": "sqrt(D + P) - 1.1625866",
+   "r_train": 0.6269005950886178,
+   "r_test": 0.5551987313533424,
+   "r_nh": 0.6463477524225916
+  },
+  {
+   "index": 6,
+   "complexity": 9,
+   "loss": 0.6885359,
+   "equation": "log((P * 0.5047745) + sqrt(D))",
+   "r_train": 0.6329241621356508,
+   "r_test": 0.5636082632333109,
+   "r_nh": 0.6465979892268425
+  },
+  {
+   "index": 7,
+   "complexity": 10,
+   "loss": 0.67832285,
+   "equation": "sqrt(D + P) - sqrt(Zs)",
+   "r_train": 0.6373394684618908,
+   "r_test": 0.5899262974068966,
+   "r_nh": 0.6694280959639577
+  },
+  {
+   "index": 8,
+   "complexity": 11,
+   "loss": 0.6474334,
+   "equation": "sqrt(P + (Us * Dg)) + -1.2700385",
+   "r_train": 0.6575372204382117,
+   "r_test": 0.6493547457464803,
+   "r_nh": 0.6717576949986259
+  },
+  {
+   "index": 9,
+   "complexity": 13,
+   "loss": 0.6367227,
+   "equation": "log((P + ((Dg * Us) + 0.6444583)) * 0.4765337)",
+   "r_train": 0.6641652226571689,
+   "r_test": 0.6611260670075649,
+   "r_nh": 0.6748108860613866
+  },
+  {
+   "index": 10,
+   "complexity": 14,
+   "loss": 0.630854,
+   "equation": "log((P * 0.5445802) + sqrt((Dl * Dg) / 0.6086429))",
+   "r_train": 0.6677139463773546,
+   "r_test": 0.6070219774995776,
+   "r_nh": 0.6798950739167838
+  },
+  {
+   "index": 11,
+   "complexity": 15,
+   "loss": 0.6198265,
+   "equation": "log(((P + (Us * Dg)) + sqrt(Dl)) * 0.45268497)",
+   "r_train": 0.6751865590801889,
+   "r_test": 0.6795633135103284,
+   "r_nh": 0.6716812891524174
+  },
+  {
+   "index": 12,
+   "complexity": 16,
+   "loss": 0.6180177,
+   "equation": "log(sqrt((square(P) + ((Dl + Us) * Dg)) * 0.59081125))",
+   "r_train": 0.6762519744159462,
+   "r_test": 0.6542544847340233,
+   "r_nh": 0.7000790269079669
+  },
+  {
+   "index": 13,
+   "complexity": 17,
+   "loss": 0.6094815,
+   "equation": "log(sqrt(((Dl + square(P)) + square(Us * Dg)) * 0.42421073))",
+   "r_train": 0.6819218015658965,
+   "r_test": 0.6781220073906422,
+   "r_nh": 0.6768153110024623
+  },
+  {
+   "index": 14,
+   "complexity": 18,
+   "loss": 0.6012977,
+   "equation": "log(sqrt((Us * (Dg * Dl)) + (square(P * 0.7142498) + 0.10343558)))",
+   "r_train": 0.6872485944242487,
+   "r_test": 0.6710023882817319,
+   "r_nh": 0.6757714418210111
+  },
+  {
+   "index": 15,
+   "complexity": 19,
+   "loss": 0.6010503,
+   "equation": "log(sqrt((square(P) + (square(Dg * Us) * Dl)) * 0.34016526) + 0.33455074)",
+   "r_train": 0.6874629900882964,
+   "r_test": 0.6816704088363692,
+   "r_nh": 0.6648108532668764
+  },
+  {
+   "index": 16,
+   "complexity": 20,
+   "loss": 0.5978934,
+   "equation": "log(sqrt((((Us * (Dg ^ 1.2934281)) * Dl) + 0.13075686) + (square(P) * 0.5199398)))",
+   "r_train": 0.6895734441528661,
+   "r_test": 0.6713212962122512,
+   "r_nh": 0.6763728562163608
+  },
+  {
+   "index": 17,
+   "complexity": 21,
+   "loss": 0.59529096,
+   "equation": "log(sqrt((((square(Dg * Us) + 0.38870916) * Dl) + square(P)) * 0.39726785) + 0.17880735)",
+   "r_train": 0.6911357542599319,
+   "r_test": 0.6812698884574364,
+   "r_nh": 0.6642419638540803
+  },
+  {
+   "index": 18,
+   "complexity": 22,
+   "loss": 0.5922685,
+   "equation": "log(sqrt((((Dg + square(Us * Dg)) * Dl) + square(P)) * 0.3655186) + 0.2139011)",
+   "r_train": 0.6929381598659035,
+   "r_test": 0.6831704993642065,
+   "r_nh": 0.6801011872758868
+  },
+  {
+   "index": 19,
+   "complexity": 23,
+   "loss": 0.5908074,
+   "equation": "log((sqrt((Dl * (Dg + square(Us * Dg))) + (P ^ 2.1972451)) + 0.425493) * 0.56611085)",
+   "r_train": 0.6939051404535135,
+   "r_test": 0.6801887860816372,
+   "r_nh": 0.6818992967062913
+  },
+  {
+   "index": 20,
+   "complexity": 24,
+   "loss": 0.58820796,
+   "equation": "log(sqrt((square(P) + (square((Dg * Us) + 0.47459406) * Dl)) / (Zt + 1.8714793)) - -0.153077)",
+   "r_train": 0.6955288192619619,
+   "r_test": 0.6932505066283998,
+   "r_nh": 0.676504489591488
+  },
+  {
+   "index": 21,
+   "complexity": 25,
+   "loss": 0.5850974,
+   "equation": "log(sqrt((square(P) + (Dl * (square(Dg * Us) + Dg))) / (Zt + 1.7039512)) + 0.19406646)",
+   "r_train": 0.6974731649512713,
+   "r_test": 0.6889812571623436,
+   "r_nh": 0.6835605027947506
+  },
+  {
+   "index": 22,
+   "complexity": 27,
+   "loss": 0.5835296,
+   "equation": "log(sqrt(((Dl * (square(Us * Dg) + (Dg * 1.796144))) + square(P)) / (Zt + 1.6969197)) + 0.13430513)",
+   "r_train": 0.6983946284412585,
+   "r_test": 0.6876270891778911,
+   "r_nh": 0.6899907580029142
+  },
+  {
+   "index": 23,
+   "complexity": 28,
+   "loss": 0.58128,
+   "equation": "log(sqrt((((((Dg * square(Us)) + 3.525209) * Dg) * Dl) + square(P)) / ((Dg + Zt) + 1.0719079)))",
+   "r_train": 0.6998197424979429,
+   "r_test": 0.6885772912584618,
+   "r_nh": 0.6855169506895311
+  },
+  {
+   "index": 24,
+   "complexity": 29,
+   "loss": 0.5798408,
+   "equation": "log(sqrt((square(P) + ((square(Dg * Us) + 3.742686) * (Dl * Dg))) / (square(Dg) + (Zt + 1.1346158))))",
+   "r_train": 0.7009019036150909,
+   "r_test": 0.6764865927364375,
+   "r_nh": 0.6879123934096897
+  },
+  {
+   "index": 25,
+   "complexity": 31,
+   "loss": 0.5759124,
+   "equation": "log(sqrt((square(P) + ((Dl * ((square(Us) * Dg) + 2.8410766)) * Dg)) / (Dg + ((Zt + Zs) * 0.6993757))))",
+   "r_train": 0.7031693988116116,
+   "r_test": 0.6943466276279238,
+   "r_nh": 0.6966871202720086
+  },
+  {
+   "index": 26,
+   "complexity": 32,
+   "loss": 0.57338345,
+   "equation": "log(sqrt((((Dl * Dg) * (square(Us * Dg) + 2.895764)) + square(P)) / (square(Dg) + ((Zt + Zs) * 0.6956044))))",
+   "r_train": 0.7047376604255581,
+   "r_test": 0.6817294428513431,
+   "r_nh": 0.6987063892928562
+  },
+  {
+   "index": 27,
+   "complexity": 34,
+   "loss": 0.5722339,
+   "equation": "log(sqrt((((Dl * Dg) * (square(Us * (Dg + 0.11602)) + 2.869476)) + square(P)) / (square(Dg) + ((Zs + Zt) * 0.7424074))))",
+   "r_train": 0.7055814448599123,
+   "r_test": 0.6892433291612148,
+   "r_nh": 0.6999400671095636
+  },
+  {
+   "index": 28,
+   "complexity": 35,
+   "loss": 0.5717255,
+   "equation": "log(sqrt((((Dl * (square(Dg * Us) + (D + 2.5354764))) * Dg) + square(P)) / (((Zs + Zt) * 0.7286169) + square(Dg))))",
+   "r_train": 0.7059201039355211,
+   "r_test": 0.6847184691895409,
+   "r_nh": 0.7005402127432989
+  },
+  {
+   "index": 29,
+   "complexity": 36,
+   "loss": 0.56989384,
+   "equation": "log(sqrt(((Dl * ((square(Dg * (Us / 0.7473994)) + 3.0196433) * Dg)) + square(P)) / (square(Dg) + ((Zs + Zt) * 0.36017182)))) - 0.34097752",
+   "r_train": 0.7068588359923181,
+   "r_test": 0.6899978847758718,
+   "r_nh": 0.694351229298665
+  },
+  {
+   "index": 30,
+   "complexity": 37,
+   "loss": 0.5688875,
+   "equation": "log(sqrt(((((1.5892459 + D) + square(Us * Dg)) * ((Dg * Dl) ^ 0.81093293)) + square(P)) / (square(Dg) + ((Zs + Zt) * 0.7173817))))",
+   "r_train": 0.7075546043023995,
+   "r_test": 0.6893083679473198,
+   "r_nh": 0.7011859752728165
+  },
+  {
+   "index": 31,
+   "complexity": 39,
+   "loss": 0.5685623,
+   "equation": "log(sqrt((((square(Us * (Dg + 0.0898782)) + (D + 1.7447015)) * ((Dl * Dg) + 0.040422432)) + square(P)) / (((Zs + Zt) * 0.76644) + square(Dg))))",
+   "r_train": 0.7077998214567987,
+   "r_test": 0.6949143305616987,
+   "r_nh": 0.6979212292711539
+  }
+ ],
+ "train_on": "both",
+ "refs": {
+  "D_REF": 3e-07,
+  "P_REF": 3e-08,
+  "Y_REF": 0.00468,
+  "U_REF": 10.0,
+  "Z_REF": 5000.0,
+  "Zeta_REF": 3e-05,
+  "P_FLOOR": 0.0001
+ }
+}

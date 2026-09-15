@@ -1,0 +1,50 @@
+SH events: 19888   NH events: 7594
+
+=== Julio's configuration: SH-fit, |error|^5 loss ===
+
+tilt_levs+tilt  (5 predictors)
+       train  n= 15923  r=0.709  R2=+0.487  slope=0.95  bias=-0.06 dex
+        test  n=  2395  r=0.685  R2=+0.443  slope=1.02  bias=+0.05 dex
+          nh  n=  7594  r=0.539  R2=+0.102  slope=0.65  bias=-0.11 dex
+  (his linear-space test r=0.625 R2=+0.356)
+
+tilt_levs+precl  (2 predictors)
+       train  n= 15923  r=0.658  R2=+0.394  slope=0.95  bias=-0.09 dex
+        test  n=  2395  r=0.620  R2=+0.383  slope=0.94  bias=-0.02 dex
+          nh  n=  7594  r=0.675  R2=+0.449  slope=0.92  bias=+0.02 dex
+  (his linear-space test r=0.646 R2=+0.338)
+
+tilt_levs+tilt+precl  (6 predictors)
+       train  n= 15923  r=0.774  R2=+0.580  slope=0.91  bias=-0.06 dex
+        test  n=  2395  r=0.761  R2=+0.563  slope=0.94  bias=+0.03 dex
+          nh  n=  7594  r=0.710  R2=+0.418  slope=0.74  bias=-0.06 dex
+  (his linear-space test r=0.711 R2=+0.371)
+
+tilt_levs+fgf  (5 predictors)
+       train  n= 15923  r=0.584  R2=+0.301  slope=1.03  bias=-0.10 dex
+        test  n=  2395  r=0.482  R2=+0.219  slope=0.91  bias=+0.01 dex
+          nh  n=  7594  r=0.425  R2=+0.169  slope=1.07  bias=-0.03 dex
+  (his linear-space test r=0.484 R2=+0.184)
+
+tilt_levs+tilt+fgf  (9 predictors)
+       train  n= 15923  r=0.713  R2=+0.498  slope=0.95  bias=-0.05 dex
+        test  n=  2395  r=0.688  R2=+0.443  slope=0.99  bias=+0.06 dex
+          nh  n=  7594  r=0.558  R2=+0.162  slope=0.71  bias=-0.11 dex
+  (his linear-space test r=0.592 R2=+0.266)
+
+=== calibration test: best set under plain MSE ===
+       train  n= 15923  r=0.804  R2=+0.645  slope=1.04  bias=-0.02 dex
+        test  n=  2395  r=0.795  R2=+0.592  slope=1.09  bias=+0.06 dex
+          nh  n=  7594  r=0.709  R2=+0.491  slope=0.88  bias=+0.01 dex
+
+=== global fit: best set, both hemispheres ===
+  loss_power=5
+         train  n= 22086  r=0.786  R2=+0.609  slope=0.97  bias=-0.04 dex
+          test  n=  3259  r=0.762  R2=+0.573  slope=0.99  bias=+0.02 dex
+            nh  n=  7594  r=0.758  R2=+0.562  slope=0.88  bias=-0.02 dex
+  loss_power=2
+         train  n= 22086  r=0.796  R2=+0.634  slope=0.99  bias=-0.01 dex
+          test  n=  3259  r=0.790  R2=+0.599  slope=1.01  bias=+0.04 dex
+            nh  n=  7594  r=0.785  R2=+0.607  slope=0.89  bias=-0.01 dex
+
+wrote /glade/work/wchapman/PYSR_Julio/event_nn_results.json

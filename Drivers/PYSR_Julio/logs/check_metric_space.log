@@ -1,0 +1,17 @@
+target stored as log(epwp/Y_REF): confirmed
+  log space : mean -0.032  sd 1.111
+  linear    : median 0.00434  p99/p50 16.6x
+
+Attempting to load model from /glade/work/wchapman/PYSR_Julio/pysr_outputs/gwsrc_distill_data/checkpoint.pkl...
+ cx   r (log)  r (linear)  R2 (log)  equation
+ 11    0.6494      0.4440    0.3890  sqrt((Dg * Us) + P) + -1.2700555
+ 15    0.6796      0.5516    0.4186  log(((P + (Us * Dg)) + sqrt(Dl)) / 2.2094)
+ 17    0.6781      0.5513    0.4279  log(sqrt((square(P) + (square(Us * Dg) + Dl)) / 2.3568816))
+ 24    0.6797      0.5432    0.4393  (log(square(P) + ((Dg * (Us + 1.6100847)) * Dl)) - (Zt / exp
+ 28    0.6937      0.5815    0.4612  (log((square(((Dg + -0.169689) * Us) + 0.6263065) * Dl) + (P
+ 34    0.7040      0.6020    0.4694  log(sqrt((((Dg + square(Us * Dg)) * Dl) + square(P)) / (Dg +
+ 37    0.6899      0.5911    0.4612  log(sqrt((((Dl * Dg) * (square(Us * Dg) + 3.7317984)) + squa
+
+The reported column throughout this project is r (log).
+Linear-space r is lower because exp() restores the heavy right tail,
+so a handful of the largest events dominate the covariance.

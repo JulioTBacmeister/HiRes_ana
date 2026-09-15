@@ -1,0 +1,54 @@
+
+=== sigma=2 (as published) ===
+cells used:          1599 of 1600
+within-cell  var:    0.8190  (log units)
+between-cell var:    0.4245
+explained fraction:  0.341
+ceiling on log-r:    0.584
+median 16–84 spread: 5.46x
+  [sh] n=4,259,021  var(log tau)=1.243
+        Julio's form, published coeffs : r=0.5784
+        Julio's form, refit here       : r=0.5816
+        ceiling for ANY f(D,P)         : r=0.5843  (1599 cells)
+cells used:          1599 of 1600
+within-cell  var:    0.5233  (log units)
+between-cell var:    0.5005
+explained fraction:  0.489
+ceiling on log-r:    0.699
+median 16–84 spread: 4.19x
+  [nh] n=4,544,059  var(log tau)=1.024
+        Julio's form, published coeffs : r=0.6309
+        Julio's form, refit here       : r=0.6991
+        ceiling for ANY f(D,P)         : r=0.6992  (1599 cells)
+
+=== sigma=0 (bare f09 column) ===
+/glade/work/wchapman/PYSR_Julio/baseline_s0.py:109: RuntimeWarning: overflow encountered in exp
+  return dict(y0=0.0, A=np.exp(x[0]), a=x[1], D0=np.exp(x[2]),
+/glade/work/juliob/HiRes_ana_dev/Drivers/Analysis/source_fit_refvals.py:82: RuntimeWarning: divide by zero encountered in divide
+  dyn = mult_A * A * (d / D_REF)**a / (1.0 + d / D0)
+/glade/work/juliob/HiRes_ana_dev/Drivers/Analysis/source_fit_refvals.py:82: RuntimeWarning: invalid value encountered in divide
+  dyn = mult_A * A * (d / D_REF)**a / (1.0 + d / D0)
+/glade/work/juliob/HiRes_ana_dev/Drivers/Analysis/source_fit_refvals.py:82: RuntimeWarning: overflow encountered in divide
+  dyn = mult_A * A * (d / D_REF)**a / (1.0 + d / D0)
+cells used:          1600 of 1600
+within-cell  var:    1.7115  (log units)
+between-cell var:    0.3168
+explained fraction:  0.156
+ceiling on log-r:    0.395
+median 16–84 spread: 12.66x
+  [sh] n=4,135,037  var(log tau)=2.028
+        Julio's form, published coeffs : r=0.3258
+        Julio's form, refit here       : r=0.3704
+        ceiling for ANY f(D,P)         : r=0.3952  (1600 cells)
+cells used:          1600 of 1600
+within-cell  var:    1.4349  (log units)
+between-cell var:    0.3424
+explained fraction:  0.193
+ceiling on log-r:    0.439
+median 16–84 spread: 10.35x
+  [nh] n=4,324,759  var(log tau)=1.777
+        Julio's form, published coeffs : r=0.3189
+        Julio's form, refit here       : r=0.4295
+        ceiling for ANY f(D,P)         : r=0.4389  (1600 cells)
+
+wrote /glade/work/wchapman/PYSR_Julio/baseline_s0.json

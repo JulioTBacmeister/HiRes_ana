@@ -1,0 +1,19 @@
+source grid: nt=247 ny=192 nx=288
+SH mask columns: 17243  -> 4,259,021 samples
+NH mask columns: 18397  -> 4,544,059 samples
+horizontal smoothing: sigma=0.0 grid cells (none -- bare f09 columns)
+  smoothed epwp_zl
+  smoothed tilt_zs
+  smoothed tilt_zl
+  smoothed tilt_zs_zl
+  smoothed tilt_zg_zs
+  smoothed zeta_zs
+  smoothed zeta_zl
+  smoothed precl
+  smoothed u_zs
+  smoothed v_zs
+  smoothed u_zl
+  smoothed v_zl
+sh: 4,259,021 samples
+nh: 4,544,059 samples
+wrote /glade/work/wchapman/PYSR_Julio/gwsrc_data_s0.npz

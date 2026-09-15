@@ -1,0 +1,107 @@
+test rows: SH 1,275,982  NH 1,361,378
+
+Attempting to load model from /glade/work/wchapman/PYSR_Julio/pysr_outputs/gwsrc_distill_mlp/checkpoint.pkl...
+===== teacher = mlp =====
+ cx      SH      NH  r_teach  equation
+ 10  0.5899  0.6694   0.7400  sqrt(P + D) - sqrt(Zs)
+ 11  0.6494  0.6718   0.8077  sqrt((Dg * Us) + P) - 1.2587122
+ 13  0.6611  0.6748   0.8200  log((P + ((Dg * Us) + 0.65064347)) / 2.0848038)
+ 14  0.6071  0.6799   0.7906  log((P / 1.8246305) + sqrt(Dg * (Dl * 1.6851453)))
+ 15  0.6796  0.6717   0.8484  log((P + ((Us * Dg) + sqrt(Dl))) / 2.1855183)
+ 16  0.6646  0.6421   0.8461  log((((Dg * Dl) * Us) + (P + 0.8125043)) / 2.1224358)
+ 17  0.6759  0.6622   0.8519  log(((((Us * Dg) * sqrt(Dl)) + P) + 0.691624) / 2.0310495)
+ 18  0.6704  0.6756   0.8468  log(sqrt((square(0.7218607 * P) + ((Us * Dl) * Dg)) + 0.10896307))
+ 19  0.6787  0.6689   0.8558  log((P ^ 2.5596752) + (Dl * (square(Us * Dg) + 0.1290057))) * 0.319164
+ 20  0.6822  0.6605   0.8658  (log(square(P) + (Dl * (square(Dg * Us) + 0.52003884))) + -0.46395433) * 0.4249959
+ 21  0.6788  0.6665   0.8614  (log(((square(Us * Dg) + 0.44909117) * Dl) + (P ^ 2.3507838)) * 0.38788283) + -0.1770422
+ 22  0.6785  0.6871   0.8594  (log((P ^ 2.5449412) + (Dl * (Dg + square(Us * Dg)))) + -0.3651425) * 0.34492344
+ 23  0.6791  0.6806   0.8631  (log(((square(Us * Dg) + sqrt(Dg)) * Dl) + (P ^ 2.3850195)) * 0.39150527) + -0.21410836
+ 24  0.6795  0.6916   0.8605  (log(square(P) + (((Us + 1.6895587) * Dl) * Dg)) - (Zt / exp(D))) * 0.45322683
+ 25  0.6804  0.6909   0.8616  (log((P ^ 1.9472458) + (Dg * (Dl * (Us + 1.7134367)))) - (Zt / exp(D))) * 0.46203846
+ 26  0.6985  0.6826   0.8750  (log((P ^ 2.5406647) + (Dl * square((Us * Dg) + 0.40018645))) - (Zt / exp(D))) * 0.34856
+ 27  0.6958  0.6916   0.8765  (log((P ^ 2.5681968) + (Dl * (Dg + square(Dg * Us)))) - (Zt / exp(D))) * 0.34084705
+ 28  0.6927  0.6829   0.8776  (log((P ^ 2.3442354) + (square(-0.6246575 - (Us * (Dg + -0.16853708))) * Dl)) - (Zt / ex
+ 29  0.6964  0.6935   0.8784  (log((Dg * (((square(Us) * Dg) + 1.4019747) * Dl)) + (P ^ 2.4346578)) - (Zt / exp(D))) *
+ 31  0.6960  0.6942   0.8780  (log((P ^ 2.466484) + (((Dg * 1.5879524) + square(Us * Dg)) * Dl)) * 0.3619683) - ((0.40
+ 32  0.6971  0.6939   0.8787  ((log((P ^ 2.6262362) + (Dl * ((Dg * 1.5453091) + ((Us * Dg) ^ 2.2533321)))) * -0.817078
+ 33  0.7006  0.6893   0.8837  (Zs * ((Zt * -0.30821362) / exp(D))) + (log((Dl * (((Us * Dg) ^ 1.641283) + sqrt(Dg))) +
+ 34  0.6998  0.6914   0.8823  ((Zt * (Zs * (-0.7773808 / exp(D)))) + log((P ^ 2.277303) + ((((Dg * Us) ^ 1.8311696) + 
+ 35  0.7001  0.6913   0.8825  (((Zt * Zs) * -0.30869642) / exp(D)) + (log(square(P ^ 1.1385968) + (Dl * (((Us * Dg) ^ 
+ 36  0.6991  0.6963   0.8792  (log(((((Us * Dg) ^ 1.6026478) + sqrt(Dg)) * sqrt(Dl)) + square(P)) + (((0.0937039 / Dl)
+ 37  0.6993  0.6963   0.8816  (log(((sqrt(Dg) + ((Dg * Us) ^ 1.935414)) * Dl) + square(P ^ 1.206649)) * 0.3798656) + (
+ 38  0.7011  0.7055   0.8797  (((Dg + Zt) / (sqrt(D) / -0.13370322)) + (log((sqrt(Dl) * (square(Us * Dg) + sqrt(Dg))) 
+ 39  0.6972  0.7096   0.8758  (((((Dg + Zt) / exp(D)) + (0.07483565 / Dg)) / -1.5144051) + log(square(P) + (sqrt(Dl) *
+ 40  0.6958  0.7090   0.8775  (log(square(P) + (sqrt(Dl) * (sqrt(Dg) + (square(Dg) * (Us ^ 1.6267458))))) * 0.4899497)
+
+  best-SH: cx=38  SH=0.7011  NH=0.7055
+
+Attempting to load model from /glade/work/wchapman/PYSR_Julio/pysr_outputs/gwsrc_distill_tree/checkpoint.pkl...
+===== teacher = tree =====
+ cx      SH      NH  r_teach  equation
+ 10  0.5899  0.6694   0.7536  sqrt(P + D) - sqrt(Zs)
+ 11  0.6494  0.6718   0.8187  sqrt((Us * Dg) + P) - 1.2700015
+ 13  0.6611  0.6748   0.8297  log((P + ((Dg * Us) + 0.6469515)) * 0.4756175)
+ 14  0.6070  0.6799   0.8056  log(sqrt((Dg * 1.641818) * Dl) + (P * 0.5450408))
+ 15  0.6796  0.6717   0.8594  log(((Dg * Us) + (sqrt(Dl) + P)) * 0.45262673)
+ 16  0.6647  0.6421   0.8600  log((((Us * (Dl * Dg)) + 0.8046979) + P) * 0.46827987)
+ 17  0.6781  0.6768   0.8590  log(sqrt(((square(P) + square(Us * Dg)) + Dl) / 2.357476))
+ 18  0.6710  0.6758   0.8598  log(sqrt(((square(P) + 0.20368662) / 1.9578366) + ((Dg * Us) * Dl)))
+ 19  0.6817  0.6648   0.8718  log(sqrt(((Dl * square(Us * Dg)) + square(P)) / 2.9425619) + 0.3345898)
+ 20  0.6817  0.6603   0.8793  log(((Dl * (square(Us * Dg) + 0.5686949)) + square(P)) / 1.6894674) * 0.43265292
+ 21  0.6812  0.6641   0.8777  log(sqrt(((Dl * (square(Dg * Us) + 0.40338144)) + square(P)) / 2.5170317) + 0.17489646)
+ 22  0.6832  0.6801   0.8788  log(sqrt(((Dl * (square(Dg * Us) + Dg)) + square(P)) / 2.7379224) + 0.21407704)
+ 23  0.6810  0.6669   0.8800  log(sqrt((square(P) + (Dl * (square(Us * Dg) + 0.8039761))) / (Dg + Zs)))
+ 24  0.6933  0.6766   0.8836  log(sqrt(((Dl * square((Us * Dg) + 0.48110035)) + square(P)) / (Zt + 1.9131185)) + 0.155
+ 25  0.6890  0.6836   0.8832  log(sqrt(((Dl * (Dg + square(Dg * Us))) + square(P)) / (Zt + 1.7113997)) + 0.19466469)
+ 27  0.6876  0.6900   0.8838  log(sqrt(((Dg * (Dl * ((Dg * square(Us)) + 1.7939703))) + square(P)) / (Zt + 1.7209126))
+ 28  0.6886  0.6855   0.8909  log(sqrt(((((square(Us) * Dg) + 3.5254438) * (Dg * Dl)) + square(P)) / (Dg + (Zt + 1.073
+ 29  0.6765  0.6878   0.8876  log(sqrt((square(P) + ((Dg * (square(Us * Dg) + 3.7310345)) * Dl)) / ((Zt + square(Dg)) 
+ 31  0.6886  0.6889   0.8950  log(sqrt((((Dg * (square((-0.19015197 - Dg) * Us) + 3.4279923)) * Dl) + square(P)) / ((Z
+ 32  0.6902  0.6859   0.8884  log(sqrt(((Dl ^ 0.65829116) / (Dg + ((Zs + Zt) * 0.3933301))) * (square((Us * (Dg + -0.2
+ 33  0.6912  0.6879   0.8960  log(sqrt((square(P) + (Dl * ((square(Us * (Dg - -0.20789254)) + 2.6614575) * Dg))) / ((Z
+ 34  0.6944  0.6906   0.8902  log(sqrt((((((Dg + -0.17669068) * (D + Us)) + 0.55063677) ^ 1.9121443) + square(P)) * ((
+ 35  0.7028  0.6825   0.8992  log((Dl ^ 0.34779876) * (sqrt(square(P) + square(((Us + D) * (Dg + -0.18608075)) + 0.511
+ 36  0.7047  0.6842   0.9014  log((sqrt(square(P) + ((((D + Us) * (Dg + -0.19194034)) + 0.53833324) ^ 2.089371)) * (Dl
+ 37  0.7039  0.6894   0.9015  log((sqrt(square(((D + Us) * (Dg + -0.19720006)) + 0.53389853) + square(P)) / ((Dg + ((Z
+ 39  0.7030  0.6906   0.9013  log((Dl ^ 0.32326058) * ((sqrt(square(P) + square(0.4379599 + ((Dg + -0.19350363) * (Us 
+ 40  0.6976  0.6953   0.8955  log(sqrt((((((Dg + -0.21193652) * (D + Us)) + 0.5182988) ^ 1.991676) + square(P)) * ((Dl
+
+  best-SH: cx=36  SH=0.7047  NH=0.6842
+
+Attempting to load model from /glade/work/wchapman/PYSR_Julio/pysr_outputs/gwsrc_distill_data/checkpoint.pkl...
+===== teacher = data =====
+ cx      SH      NH  r_teach  equation
+ 10  0.5653  0.6435   0.5653  log((D ^ 0.5689637) + (P * 0.5261487))
+ 11  0.6494  0.6718   0.6494  sqrt((Us * Dg) + P) + -1.2695438
+ 13  0.6611  0.6748   0.6611  log((((Dg * Us) + P) + 0.64245063) / 2.09596)
+ 14  0.6070  0.6799   0.6070  log(P + sqrt((Dl * 5.527699) * Dg)) + -0.60733384
+ 15  0.6796  0.6717   0.6796  log(((P + (Us * Dg)) + sqrt(Dl)) / 2.2094)
+ 16  0.6543  0.7001   0.6543  log(sqrt((square(P) + ((Dl + Us) * Dg)) / 1.6932453))
+ 17  0.6781  0.6768   0.6781  log(sqrt((square(P) + (square(Us * Dg) + Dl)) / 2.3568816))
+ 18  0.6710  0.6758   0.6710  log(sqrt((((Dg * Dl) * Us) + 0.103733644) + square(P * -0.7135248)))
+ 19  0.6817  0.6648   0.6817  log(sqrt((square(P) + (Dl * square(Us * Dg))) / 2.92336) + 0.33379307)
+ 20  0.6820  0.6605   0.6820  (log(((square(Dg * Us) + 0.5397018) * Dl) + square(P)) + -0.49687552) * 0.42872056
+ 21  0.6812  0.6641   0.6812  log(sqrt((square(P) + (Dl * (square(Us * Dg) + 0.40490335))) / 2.5107834) + 0.17431934)
+ 22  0.6832  0.6801   0.6832  log(sqrt((((Dg + square(Dg * Us)) * Dl) + square(P)) / 2.7439482) + 0.21326974)
+ 23  0.6810  0.6817   0.6810  log(sqrt((square(P) + (Dl * (((Dg * Us) ^ 1.769116) + Dg))) / 2.4550164) + 0.1904677)
+ 24  0.6934  0.6765   0.6934  log(sqrt(((Dl * square((Dg * Us) + 0.49522716)) + square(P)) / (Zt + 1.8846093)) + 0.146
+ 25  0.6890  0.6836   0.6890  log(sqrt((square(P) + (Dl * (square(Dg * Us) + Dg))) / (Zt + 1.7040238)) + 0.1945363)
+ 26  0.6904  0.6782   0.6904  (log(((sqrt(Dg) + square(Us * Dg)) * Dl) + square(P)) * 0.43941745) - sqrt(Zt * 0.065321
+ 27  0.6897  0.6786   0.6897  (log(square(P) + ((((Us * Dg) ^ 1.9302133) + sqrt(Dg)) * Dl)) * 0.4442994) - sqrt(Zt * 0
+ 28  0.6991  0.6878   0.6991  log(sqrt((((Dg + square(Dg * Us)) * Dl) + square(P)) / ((Zt / D) + 1.5671799)) + 0.24858
+ 29  0.6988  0.6819   0.6988  (log(square(P) + ((square(Dg * Us) + sqrt(Dg)) * Dl)) * 0.4307066) - (Zt * (0.16847482 /
+ 30  0.6979  0.6890   0.6979  log(sqrt(((Dl * (Dg + square((Us * Dg) ^ 0.85190225))) + square(P)) / ((Zt / D) + 1.3198
+ 31  0.7018  0.6823   0.7018  log(sqrt((((Dg + square(Dg * Us)) * Dl) + square(P)) / ((Dg + (Zt / D)) + 0.9025978)) + 
+ 33  0.7015  0.6852   0.7015  log((sqrt(((Dl * (square(Dg * Us) + Dg)) + square(P)) / ((Dg + 1.5585282) + (Zt / D))) +
+ 34  0.7040  0.6902   0.7040  log(sqrt((((Dg + square(Us * Dg)) * Dl) + square(P)) / (Dg + ((Zs + (Zt / D)) / 1.484238
+ 35  0.7033  0.6909   0.7033  log(sqrt((square(P) + (Dl * (square(Us * Dg) + Dg))) / (((0.23163188 / D) * square(Dg + 
+ 36  0.7025  0.6931   0.7025  log(sqrt((square(P) + (Dl * (Dg + square(Us * Dg)))) / ((((square(Zt) + square(Dg)) / D)
+ 37  0.7034  0.6984   0.7034  log(sqrt((square(P) + (Dg * (Dl * ((square(Us) * Dg) + 2.1501434)))) / (((square(Zt + Dg
+ 39  0.6976  0.7008   0.6976  log(sqrt(((((Dg * square((Us * Dg) + 2.291313)) * Dl) * 0.3735599) + square(P)) / (((squ
+ 40  0.7000  0.6998   0.7000  log(sqrt(((((Dg + Dg) + ((Us ^ 1.7886055) * square(Dg))) * Dl) + square(P)) / (Zs + (squ
+
+  best-SH: cx=34  SH=0.7040  NH=0.6902
+
+reference   direct fit (full_both, 5 h): SH 0.6949  NH 0.6979
+reference   MLP teacher                : SH 0.7333  NH 0.7337
+reference   tree teacher               : SH 0.7297  NH 0.7340

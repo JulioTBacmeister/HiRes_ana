@@ -1,0 +1,31 @@
+reading cam77_dyamond1_prod1_2016-08-01-10800-x-2016-08-31-75600_35N-70N_ocean_EvZ10km_rho_epwp_subt_ftp5X5_Frac100%_v4.pkl (24.0 GiB) ...
+  loaded 6 threshold elements in 39 s
+  case=cam77_dyamond1_prod1  lat_range=[35, 70]  N_events=7594  peak_footprint=(5, 5)
+  u_4D: (7594, 3, 58, 11, 11)
+  tilt_4D: (7594, 3, 58, 11, 11)
+  precl_4D: (7594, 3, 58, 11, 11)
+  epwp_4D: (7594, 3, 58, 11, 11)
+  zeta_4D: (7594, 3, 58, 11, 11)
+  fgf_4D: (7594, 3, 58, 11, 11)
+  [nh] tilt_levs+tilt: X=(7594, 5)  (1 s)
+  [nh] tilt_levs+precl: X=(7594, 2)  (0 s)
+  [nh] tilt_levs+tilt+precl: X=(7594, 6)  (1 s)
+  [nh] tilt_levs+fgf: X=(7594, 5)  (0 s)
+  [nh] tilt_levs+tilt+fgf: X=(7594, 9)  (1 s)
+  [nh] target: n=7594  footprint=(11, 11)  median=0.004706
+reading cam77_dyamond1_prod1_2016-08-01-10800-x-2016-08-31-75600_60S-40S_ocean_EvZ10km_rho_epwp_subt_ftp5X5_Frac100%_v4.pkl (61.3 GiB) ...
+  loaded 6 threshold elements in 97 s
+  case=cam77_dyamond1_prod1  lat_range=[-60, -40]  N_events=19888  peak_footprint=(5, 5)
+  u_4D: (19888, 3, 58, 11, 11)
+  tilt_4D: (19888, 3, 58, 11, 11)
+  precl_4D: (19888, 3, 58, 11, 11)
+  epwp_4D: (19888, 3, 58, 11, 11)
+  zeta_4D: (19888, 3, 58, 11, 11)
+  fgf_4D: (19888, 3, 58, 11, 11)
+  [sh] tilt_levs+tilt: X=(19888, 5)  (2 s)
+  [sh] tilt_levs+precl: X=(19888, 2)  (1 s)
+  [sh] tilt_levs+tilt+precl: X=(19888, 6)  (1 s)
+  [sh] tilt_levs+fgf: X=(19888, 5)  (1 s)
+  [sh] tilt_levs+tilt+fgf: X=(19888, 9)  (2 s)
+  [sh] target: n=19888  footprint=(11, 11)  median=0.007308
+wrote /glade/work/wchapman/PYSR_Julio/event_data.npz (12.7 MiB)

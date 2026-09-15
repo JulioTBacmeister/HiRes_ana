@@ -1,0 +1,29 @@
+[NbConvertApp] Converting notebook pysr_gwsrc_fit.ipynb to notebook
+/glade/work/wchapman/conda-envs/L96M2lines/lib/python3.9/site-packages/nbformat/__init__.py:96: MissingIDFieldWarning: Cell is missing an id field, this will become a hard error in future nbformat versions. You may want to use `normalize()` on your notebooks before validations (available since nbformat 5.1.4). Previous versions of nbformat are fixing this issue transparently, and will stop doing so in the future.
+  validate(nb)
+[32m[1mPrecompiling[22m[39m packages...
+    859.1 ms[32m  ✓ [39m[90mDataValueInterfaces[39m
+    774.0 ms[32m  ✓ [39m[90mIteratorInterfaceExtensions[39m
+    809.2 ms[32m  ✓ [39m[90mUnsafePointers[39m
+    768.3 ms[32m  ✓ [39m[90mDataAPI[39m
+    673.8 ms[32m  ✓ [39m[90mScratch[39m
+    785.3 ms[32m  ✓ [39m[90mPidfile[39m
+   1036.5 ms[32m  ✓ [39m[90mRequires[39m
+    919.8 ms[32m  ✓ [39m[90mPreferences[39m
+    620.1 ms[32m  ✓ [39m[90mTableTraits[39m
+    653.6 ms[32m  ✓ [39m[90mPrecompileTools[39m
+    795.8 ms[32m  ✓ [39m[90mJLLWrappers[39m
+   2347.6 ms[32m  ✓ [39m[90mOrderedCollections[39m
+   3661.3 ms[32m  ✓ [39m[90mStructUtils[39m
+   2276.0 ms[32m  ✓ [39m[90mpixi_jll[39m
+   4085.9 ms[32m  ✓ [39m[90mMacroTools[39m
+   2294.8 ms[32m  ✓ [39m[90mmicromamba_jll[39m
+   2425.8 ms[32m  ✓ [39m[90mTables[39m
+    566.2 ms[32m  ✓ [39m[90mStructUtils → StructUtilsTablesExt[39m
+   1507.0 ms[32m  ✓ [39m[90mMicroMamba[39m
+   8764.2 ms[32m  ✓ [39m[90mParsers[39m
+   6630.5 ms[32m  ✓ [39m[90mJSON[39m
+   2438.6 ms[32m  ✓ [39m[90mCondaPkg[39m
+  20321.8 ms[32m  ✓ [39mPythonCall
+  23 dependencies successfully precompiled in 41 seconds. 30 already precompiled.
+[NbConvertApp] Writing 1397272 bytes to pysr_gwsrc_fit.ipynb

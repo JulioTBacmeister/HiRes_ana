@@ -1,0 +1,56 @@
+#!/bin/bash
+#PBS -N pysr_gwsrc
+#PBS -A P03010039
+#PBS -q casper
+#PBS -l select=1:ncpus=32:mem=48GB
+#PBS -l walltime=12:00:00
+#PBS -j oe
+#PBS -o /glade/work/wchapman/PYSR_Julio/logs/
+
+# Symbolic regression for the GW source function. Submit as:
+#   mkdir -p logs
+#   qsub -v MODE=full,NITER=2000 submit_pysr.pbs
+#   qsub -v MODE=dp,NITER=500    submit_pysr.pbs
+#
+# run_pysr_gwsrc.py sizes itself from sched_getaffinity, not from NCPUS or
+# nproc -- PBS exports OMP_NUM_THREADS=1 via ompthreads, and GNU nproc reports
+# that back as a single core even inside a 32-core job.
+
+set -eo pipefail
+
+MODE=${MODE:-full}
+NITER=${NITER:-2000}
+
+# The search's own budget is niterations * populations, which at 32 cores runs
+# far past any sane walltime. run_pysr_gwsrc.py bounds the search on the clock
+# instead, so keep this comfortably under the -l walltime above: PySR returns
+# its hall of fame on timeout and the scoring pass still runs.
+export PYSR_TIMEOUT=${PYSR_TIMEOUT:-39600}   # 11 h under a 12 h walltime
+export PYSR_TRAIN=${PYSR_TRAIN:-sh}          # "both" fits SH+NH together
+
+# Coarse-graining the fit targets, in f09 cells. 2 reproduces Julio's notebook;
+# 0 is a bare CAM column, which is what a parameterization actually owes. Needs
+# a matching cache from `GWSRC_SIGMA=$GWSRC_SIGMA python prep_gwsrc_data.py`.
+export GWSRC_SIGMA=${GWSRC_SIGMA:-2}
+
+source /glade/u/apps/opt/miniforge/default/etc/profile.d/conda.sh
+conda activate /glade/work/wchapman/conda-envs/L96M2lines
+
+# juliapkg resolves its Julia project from CONDA_PREFIX, so the activate above
+# is load-bearing -- calling the env's python by path lands on the read-only
+# JupyterHub julia_env. Keep ~/.local out of the path so it cannot shadow the
+# env's numpy, and leave LD_LIBRARY_PATH alone: the conda libstdc++ segfaults
+# the bundled Julia.
+export PYTHONNOUSERSITE=1
+export PYTHON_JULIAPKG_PROJECT="$CONDA_PREFIX/julia_env"
+
+# The `procs` argument is ignored under parallelism='multithreading' -- PySR
+# warns about this and then takes its thread count from juliacall. 'auto'
+# resolves against the CPU affinity mask, which PBS sets correctly; pin it
+# anyway so a stray OMP_NUM_THREADS=1 in the environment cannot be mistaken for
+# the answer.
+export PYTHON_JULIACALL_THREADS=${NCPUS_ALLOC:-$(python -c "import os;print(len(os.sched_getaffinity(0)))")}
+
+cd /glade/work/wchapman/PYSR_Julio
+echo "host=$(hostname) ncpus=${NCPUS:-?} mode=$MODE niter=$NITER"
+python run_pysr_gwsrc.py "$MODE" "$NITER"

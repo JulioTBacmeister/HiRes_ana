@@ -1,0 +1,9 @@
+bare f09 column                      var=2.017  SH-test r=0.514 R2=+0.264  NH r=0.468 slope=0.89
+sigma=1                              var=1.556  SH-test r=0.608 R2=+0.368  NH r=0.645 slope=0.90
+sigma=2  (our gridded work)          var=1.243  SH-test r=0.652 R2=+0.423  NH r=0.694 slope=0.88
+sigma=3                              var=1.000  SH-test r=0.671 R2=+0.446  NH r=0.682 slope=0.86
+sigma=5                              var=0.664  SH-test r=0.681 R2=+0.460  NH r=0.627 slope=0.89
+5x5 box                              var=1.437  SH-test r=0.631 R2=+0.397  NH r=0.664 slope=0.87
+11x11 box  (Julio's event target)    var=1.014  SH-test r=0.666 R2=+0.440  NH r=0.697 slope=0.88
+
+wrote /glade/work/wchapman/PYSR_Julio/smoothing_ladder.json

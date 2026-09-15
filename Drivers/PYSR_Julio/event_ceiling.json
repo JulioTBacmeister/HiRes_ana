@@ -1,0 +1,34 @@
+{
+  "r_event": 0.7614371358266827,
+  "r_event_source": "tilt_levs+tilt+precl, |e|^5, SH-fit, SH-test",
+  "hemispheres": {
+    "sh": {
+      "n_events": 19888,
+      "n_dropped": 0,
+      "footprint": [
+        11,
+        11
+      ],
+      "var_pointwise": 1.248137427859694,
+      "var_footprint_mean": 0.8186643896763212,
+      "var_within_footprint": 0.47865401607900776,
+      "variance_ratio": 0.6559088537871722,
+      "r_pointwise_equivalent": 0.6166742303732639,
+      "spread_factor_1sigma": 1.9974038470968705
+    },
+    "nh": {
+      "n_events": 7594,
+      "n_dropped": 0,
+      "footprint": [
+        11,
+        11
+      ],
+      "var_pointwise": 1.1738728120274742,
+      "var_footprint_mean": 0.6321408640502141,
+      "var_within_footprint": 0.5976093936991052,
+      "variance_ratio": 0.5385088210352205,
+      "r_pointwise_equivalent": 0.558766633694359,
+      "spread_factor_1sigma": 2.1663679280160677
+    }
+  }
+}

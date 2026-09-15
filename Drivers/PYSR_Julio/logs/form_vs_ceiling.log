@@ -1,0 +1,9 @@
+   dp    sh 2f   tree SH=0.575 NH=0.590   PySR SH=0.574 NH=0.570 (cx=23)   gap SH=-0.001 NH=-0.020
+   dp  both 2f   tree SH=0.607 NH=0.653   PySR SH=0.569 NH=0.652 (cx=19)   gap SH=-0.038 NH=-0.001
+ tilt    sh 5f   tree SH=0.637 NH=0.661   PySR SH=0.638 NH=0.707 (cx=35)   gap SH=+0.001 NH=+0.047
+ tilt  both 5f   tree SH=0.663 NH=0.708   PySR SH=0.635 NH=0.703 (cx=34)   gap SH=-0.028 NH=-0.005
+ full  both 8f   tree SH=0.730 NH=0.735   PySR SH=0.695 NH=0.698 (cx=39)   gap SH=-0.036 NH=-0.037
+
+wrote /glade/work/wchapman/PYSR_Julio/form_vs_ceiling.json
+
+gap > 0 means the equation BEATS the form-free model, so there is nothing for a teacher to distil.

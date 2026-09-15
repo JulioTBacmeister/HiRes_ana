@@ -1,0 +1,24 @@
+8,803,080 rows, 8 features   6,165,720 train / 2,637,360 test (time-blocked)
+
+fitting tree ...
+
+fitting mlp on cuda ...
+    epoch   0  val 0.5134  best 0.5134
+    epoch  20  val 0.4133  best 0.4133
+    epoch  40  val 0.4004  best 0.4004
+    epoch  60  val 0.3937  best 0.3931
+    epoch  80  val 0.3868  best 0.3867
+    epoch 100  val 0.3819  best 0.3819
+    epoch 120  val 0.3785  best 0.3784
+    epoch 140  val 0.3762  best 0.3762
+    epoch 160  val 0.3748  best 0.3748
+    epoch 180  val 0.3744  best 0.3744
+
+tree: SH+NH test r=0.7297   NH-only r=0.7340
+
+mlp: SH+NH test r=0.7333   NH-only r=0.7337
+
+teachers agree with each other: r=0.9783
+PySR direct fit for reference:   SH 0.6949  NH 0.6979
+
+wrote /glade/work/wchapman/PYSR_Julio/distill_data.npz

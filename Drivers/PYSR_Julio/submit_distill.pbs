@@ -1,0 +1,35 @@
+#!/bin/bash
+#PBS -N pysr_distill
+#PBS -A P03010039
+#PBS -q casper
+#PBS -l select=1:ncpus=32:mem=48GB
+#PBS -l walltime=06:00:00
+#PBS -j oe
+#PBS -o /glade/work/wchapman/PYSR_Julio/logs/
+
+# Distillation search. Submit one per teacher:
+#   qsub -v TEACHER=mlp  submit_distill.pbs
+#   qsub -v TEACHER=tree submit_distill.pbs
+#   qsub -v TEACHER=data submit_distill.pbs      # control, same budget
+#
+# Needs distill_data.npz from distill_teachers.py (run in credit-casper-modern).
+
+set -eo pipefail
+
+TEACHER=${TEACHER:-mlp}
+NITER=${NITER:-2000}
+export PYSR_TIMEOUT=${PYSR_TIMEOUT:-18000}   # 5 h under a 6 h walltime
+
+source /glade/u/apps/opt/miniforge/default/etc/profile.d/conda.sh
+conda activate /glade/work/wchapman/conda-envs/L96M2lines
+
+# Same three traps as submit_pysr.pbs: activate rather than call python by path
+# (juliapkg resolves its project from CONDA_PREFIX), keep ~/.local off the path,
+# and leave LD_LIBRARY_PATH alone so the conda libstdc++ cannot segfault Julia.
+export PYTHONNOUSERSITE=1
+export PYTHON_JULIAPKG_PROJECT="$CONDA_PREFIX/julia_env"
+export PYTHON_JULIACALL_THREADS=${NCPUS_ALLOC:-$(python -c "import os;print(len(os.sched_getaffinity(0)))")}
+
+cd /glade/work/wchapman/PYSR_Julio
+echo "host=$(hostname) teacher=$TEACHER niter=$NITER"
+python run_pysr_distill.py "$TEACHER" "$NITER"

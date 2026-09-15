@@ -1,0 +1,62 @@
+[
+  {
+    "mode": "dp",
+    "train_on": "sh",
+    "n_features": 2,
+    "tree_r_test": 0.5754156042484458,
+    "tree_r_nh": 0.5902159787052697,
+    "pysr": {
+      "complexity": 23,
+      "r_test": 0.5742545607654339,
+      "r_nh": 0.5704411341813734
+    }
+  },
+  {
+    "mode": "dp",
+    "train_on": "both",
+    "n_features": 2,
+    "tree_r_test": 0.607010850472467,
+    "tree_r_nh": 0.6532058727775273,
+    "pysr": {
+      "complexity": 19,
+      "r_test": 0.5691532865884883,
+      "r_nh": 0.6524732571142663
+    }
+  },
+  {
+    "mode": "tilt",
+    "train_on": "sh",
+    "n_features": 5,
+    "tree_r_test": 0.6370979678020012,
+    "tree_r_nh": 0.6606812957649261,
+    "pysr": {
+      "complexity": 35,
+      "r_test": 0.6380076118300453,
+      "r_nh": 0.7074702530908145
+    }
+  },
+  {
+    "mode": "tilt",
+    "train_on": "both",
+    "n_features": 5,
+    "tree_r_test": 0.6629237954510239,
+    "tree_r_nh": 0.7081361489118569,
+    "pysr": {
+      "complexity": 34,
+      "r_test": 0.6347276358914943,
+      "r_nh": 0.7029515792187703
+    }
+  },
+  {
+    "mode": "full",
+    "train_on": "both",
+    "n_features": 8,
+    "tree_r_test": 0.7304228694634977,
+    "tree_r_nh": 0.7348903030115645,
+    "pysr": {
+      "complexity": 39,
+      "r_test": 0.6949143305616987,
+      "r_nh": 0.6979212292711539
+    }
+  }
+]

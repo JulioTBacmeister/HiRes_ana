@@ -1,0 +1,171 @@
+
+======================================================================
+ratio
+======================================================================
+/glade/work/wchapman/conda-envs/L96M2lines/lib/python3.9/site-packages/pysr/sr.py:2895: UserWarning: `numprocs` is specified but will be ignored since `parallelism='multithreading'`
+  warnings.warn(
+/glade/work/wchapman/conda-envs/L96M2lines/lib/python3.9/site-packages/pysr/sr.py:1873: UserWarning: Note: Setting `random_state` without also setting `deterministic=True` and `parallelism='serial'` will result in non-deterministic searches.
+  warnings.warn(
+feature          1%     median        99%
+D             0.155      0.651        4.7
+Dl            0.141       0.66       3.09
+Dg            0.159      0.566        4.3
+P            0.0001      0.371        7.6
+Us            0.236       2.16        5.4
+Ul             0.36       2.86       7.07
+Zs            0.273        1.3          2
+Zt           0.0219       1.06       3.92
+
+wall 2.3 min   front 21
+best r_test = 0.7032 at complexity 27
+  log(sqrt((((Us * (Us * 0.46117574)) * (square(Dg) + P)) + Dg) * Dl)) + (Zs * -0.23991048)
+
+======================================================================
+zscore
+======================================================================
+/glade/work/wchapman/conda-envs/L96M2lines/lib/python3.9/site-packages/pysr/sr.py:2895: UserWarning: `numprocs` is specified but will be ignored since `parallelism='multithreading'`
+  warnings.warn(
+/glade/work/wchapman/conda-envs/L96M2lines/lib/python3.9/site-packages/pysr/sr.py:1873: UserWarning: Note: Setting `random_state` without also setting `deterministic=True` and `parallelism='serial'` will result in non-deterministic searches.
+  warnings.warn(
+feature          1%     median        99%
+D            -0.853     -0.313        4.1
+Dl            -1.12     -0.266       3.76
+Dg           -0.818     -0.328       4.16
+P            -0.603     -0.367       4.22
+Us            -1.68    -0.0993       2.57
+Ul            -1.73     -0.121       2.57
+Zs            -2.74     0.0322       1.93
+Zt            -1.35     -0.173       3.08
+
+wall 0.7 min   front 17
+best r_test = 0.6916 at complexity 28
+  ((Us + P) + ((((Dl - ((Zs * 0.75002474) - Dg)) + Us) + (D * 0.32030994)) + 0.20148703)) * 0.23104945
+
+======================================================================
+log
+======================================================================
+/glade/work/wchapman/conda-envs/L96M2lines/lib/python3.9/site-packages/pysr/sr.py:2895: UserWarning: `numprocs` is specified but will be ignored since `parallelism='multithreading'`
+  warnings.warn(
+/glade/work/wchapman/conda-envs/L96M2lines/lib/python3.9/site-packages/pysr/sr.py:1873: UserWarning: Note: Setting `random_state` without also setting `deterministic=True` and `parallelism='serial'` will result in non-deterministic searches.
+  warnings.warn(
+feature          1%     median        99%
+D             -1.86     -0.429       1.55
+Dl            -1.96     -0.415       1.13
+Dg            -1.84     -0.568       1.46
+P             -9.21     -0.992       2.03
+Us            -1.45      0.769       1.69
+Ul            -1.02       1.05       1.96
+Zs             -1.3      0.262      0.693
+Zt            -3.82     0.0545       1.36
+
+wall 0.9 min   front 19
+best r_test = 0.6905 at complexity 24
+  (Dg + ((Dl + (Us * exp((Ul + (P + Ul)) * 0.17956063))) / 1.1525531)) / 1.7850467
+
+======================================================================
+scaling     best r_test   cx  non-finite
+ratio            0.7032   27           0
+zscore           0.6916   28           0
+log              0.6905   24           0
+
+wrote /glade/work/wchapman/PYSR_Julio/pysr_outputs/scaling_experiment.json
+Precompiling packages...
+   6684.5 ms  ✓ Parsers
+   5038.3 ms  ✓ JSON
+   2705.8 ms  ✓ CondaPkg
+  16147.4 ms  ✓ PythonCall
+  4 dependencies successfully precompiled in 31 seconds. 49 already precompiled.
+Precompiling packages...
+    569.7 ms  ✓ DifferentiationInterface → DifferentiationInterfaceFiniteDiffExt
+   2287.4 ms  ✓ ChainRulesCore
+   2615.5 ms  ✓ SpecialFunctions
+    531.8 ms  ✓ ArrayInterface → ArrayInterfaceChainRulesCoreExt
+    523.7 ms  ✓ ADTypes → ADTypesChainRulesCoreExt
+    625.9 ms  ✓ DispatchDoctor → DispatchDoctorChainRulesCoreExt
+    DynamicExpressions Being precompiled by another machine (hostname: crhtc68, pid: 10943, pidfile: /glade/u/home/wchapman/.julia/compiled/v1.12/DynamicExpressions/BQC8W_SFh4s.ji.pidfile)
+    768.9 ms  ✓ DifferentiationInterface → DifferentiationInterfaceChainRulesCoreExt
+   1571.4 ms  ✓ LogExpFunctions → LogExpFunctionsChainRulesCoreExt
+   1714.5 ms  ✓ ChainRulesCore → ChainRulesCoreSparseArraysExt
+   1706.9 ms  ✓ SpecialFunctions → SpecialFunctionsChainRulesCoreExt
+   4154.6 ms  ✓ ForwardDiff
+   1658.4 ms  ✓ DifferentiationInterface → DifferentiationInterfaceForwardDiffExt
+    865.1 ms  ✓ NLSolversBase
+   1855.0 ms  ✓ LineSearches
+   2844.0 ms  ✓ Optim
+  19926.7 ms  ✓ DynamicExpressions
+    DynamicExpressions → DynamicExpressionsOptimExt Being precompiled by another machine (hostname: crhtc68, pid: 10943, pidfile: /glade/u/home/wchapman/.julia/compiled/v1.12/DynamicExpressionsOptimExt/0Jtpj_SFh4s.ji.pidfile)
+    DynamicDiff Being precompiled by another machine (hostname: crhtc68, pid: 10943, pidfile: /glade/u/home/wchapman/.julia/compiled/v1.12/DynamicDiff/9kNpG_SFh4s.ji.pidfile)
+  12325.4 ms  ✓ DynamicExpressions → DynamicExpressionsOptimExt
+  13431.8 ms  ✓ DynamicDiff
+    SymbolicRegression Being precompiled by another machine (hostname: crhtc73, pid: 3840, pidfile: /glade/u/home/wchapman/.julia/compiled/v1.12/SymbolicRegression/X2eIS_SFh4s.ji.pidfile)
+ 150681.6 ms  ✓ SymbolicRegression
+  19 dependencies successfully precompiled in 188 seconds. 93 already precompiled.
+Precompiling packages...
+    498.8 ms  ✓ IfElse
+    510.0 ms  ✓ SciMLPublic
+    561.9 ms  ✓ SIMDTypes
+    589.9 ms  ✓ UnPack
+    655.0 ms  ✓ CommonWorldInvalidations
+    710.7 ms  ✓ ManualMemory
+   1019.5 ms  ✓ CpuId
+   1210.0 ms  ✓ OffsetArrays
+    480.8 ms  ✓ OffsetArrays → OffsetArraysAdaptExt
+   1888.2 ms  ✓ ThreadingUtilities
+   8489.6 ms  ✓ Static
+    536.7 ms  ✓ BitTwiddlingConvenienceFunctions
+   1078.9 ms  ✓ CPUSummary
+    984.0 ms  ✓ HostCPUFeatures
+    781.8 ms  ✓ PolyesterWeave
+   1909.6 ms  ✓ StaticArrayInterface
+    567.7 ms  ✓ StaticArrayInterface → StaticArrayInterfaceOffsetArraysExt
+    589.5 ms  ✓ CloseOpenIntervals
+    690.1 ms  ✓ LayoutPointers
+   8073.4 ms  ✓ VectorizationBase
+   1781.2 ms  ✓ SLEEFPirates
+  17246.8 ms  ✓ LoopVectorization
+  22 dependencies successfully precompiled in 39 seconds. 16 already precompiled.
+Precompiling packages...
+   2359.5 ms  ✓ DynamicExpressions → DynamicExpressionsLoopVectorizationExt
+  1 dependency successfully precompiled in 2 seconds. 46 already precompiled.
+Precompiling packages...
+    895.8 ms  ✓ LoopVectorization → SpecialFunctionsExt
+  1 dependency successfully precompiled in 1 seconds. 45 already precompiled.
+Precompiling packages...
+   2060.6 ms  ✓ LoopVectorization → ForwardDiffExt
+  1 dependency successfully precompiled in 2 seconds. 58 already precompiled.
+┌ Warning: #= /glade/u/home/wchapman/.julia/packages/DynamicExpressions/gNHdy/ext/DynamicExpressionsLoopVectorizationExt.jl:66 =#:
+│ `LoopVectorization.check_args` on your inputs failed; running fallback `@inbounds @fastmath` loop instead.
+│ Use `warn_check_args=false`, e.g. `@turbo warn_check_args=false ...`, to disable this warning.
+└ @ DynamicExpressionsLoopVectorizationExt ~/.julia/packages/LoopVectorization/Y0o9B/src/condense_loopset.jl:1166
+┌ Warning: #= /glade/u/home/wchapman/.julia/packages/DynamicExpressions/gNHdy/ext/DynamicExpressionsLoopVectorizationExt.jl:212 =#:
+│ `LoopVectorization.check_args` on your inputs failed; running fallback `@inbounds @fastmath` loop instead.
+│ Use `warn_check_args=false`, e.g. `@turbo warn_check_args=false ...`, to disable this warning.
+└ @ DynamicExpressionsLoopVectorizationExt ~/.julia/packages/LoopVectorization/Y0o9B/src/condense_loopset.jl:1166
+┌ Warning: #= /glade/u/home/wchapman/.julia/packages/DynamicExpressions/gNHdy/ext/DynamicExpressionsLoopVectorizationExt.jl:114 =#:
+│ `LoopVectorization.check_args` on your inputs failed; running fallback `@inbounds @fastmath` loop instead.
+│ Use `warn_check_args=false`, e.g. `@turbo warn_check_args=false ...`, to disable this warning.
+└ @ DynamicExpressionsLoopVectorizationExt ~/.julia/packages/LoopVectorization/Y0o9B/src/condense_loopset.jl:1166
+┌ Warning: #= /glade/u/home/wchapman/.julia/packages/DynamicExpressions/gNHdy/ext/DynamicExpressionsLoopVectorizationExt.jl:142 =#:
+│ `LoopVectorization.check_args` on your inputs failed; running fallback `@inbounds @fastmath` loop instead.
+│ Use `warn_check_args=false`, e.g. `@turbo warn_check_args=false ...`, to disable this warning.
+└ @ DynamicExpressionsLoopVectorizationExt ~/.julia/packages/LoopVectorization/Y0o9B/src/condense_loopset.jl:1166
+┌ Warning: #= /glade/u/home/wchapman/.julia/packages/DynamicExpressions/gNHdy/ext/DynamicExpressionsLoopVectorizationExt.jl:161 =#:
+│ `LoopVectorization.check_args` on your inputs failed; running fallback `@inbounds @fastmath` loop instead.
+│ Use `warn_check_args=false`, e.g. `@turbo warn_check_args=false ...`, to disable this warning.
+└ @ DynamicExpressionsLoopVectorizationExt ~/.julia/packages/LoopVectorization/Y0o9B/src/condense_loopset.jl:1166
+┌ Warning: #= /glade/u/home/wchapman/.julia/packages/DynamicExpressions/gNHdy/ext/DynamicExpressionsLoopVectorizationExt.jl:87 =#:
+│ `LoopVectorization.check_args` on your inputs failed; running fallback `@inbounds @fastmath` loop instead.
+│ Use `warn_check_args=false`, e.g. `@turbo warn_check_args=false ...`, to disable this warning.
+└ @ DynamicExpressionsLoopVectorizationExt ~/.julia/packages/LoopVectorization/Y0o9B/src/condense_loopset.jl:1166
+┌ Warning: #= /glade/u/home/wchapman/.julia/packages/DynamicExpressions/gNHdy/ext/DynamicExpressionsLoopVectorizationExt.jl:187 =#:
+│ `LoopVectorization.check_args` on your inputs failed; running fallback `@inbounds @fastmath` loop instead.
+│ Use `warn_check_args=false`, e.g. `@turbo warn_check_args=false ...`, to disable this warning.
+└ @ DynamicExpressionsLoopVectorizationExt ~/.julia/packages/LoopVectorization/Y0o9B/src/condense_loopset.jl:1166
+┌ Warning: #= /glade/u/home/wchapman/.julia/packages/DynamicExpressions/gNHdy/ext/DynamicExpressionsLoopVectorizationExt.jl:77 =#:
+│ `LoopVectorization.check_args` on your inputs failed; running fallback `@inbounds @fastmath` loop instead.
+│ Use `warn_check_args=false`, e.g. `@turbo warn_check_args=false ...`, to disable this warning.
+└ @ DynamicExpressionsLoopVectorizationExt ~/.julia/packages/LoopVectorization/Y0o9B/src/condense_loopset.jl:1166
+┌ Warning: #= /glade/u/home/wchapman/.julia/packages/DynamicExpressions/gNHdy/ext/DynamicExpressionsLoopVectorizationExt.jl:152 =#:
+│ `LoopVectorization.check_args` on your inputs failed; running fallback `@inbounds @fastmath` loop instead.
+│ Use `warn_check_args=false`, e.g. `@turbo warn_check_args=false ...`, to disable this warning.
+└ @ DynamicExpressionsLoopVectorizationExt ~/.julia/packages/LoopVectorization/Y0o9B/src/condense_loopset.jl:1166
